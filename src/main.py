@@ -1,14 +1,17 @@
 import requests
+from bs4 import BeautifulSoup
 
 url = "https://keirin.jp/pc/top"
 
-response = requests.get(
+html = requests.get(
     url,
-    headers={
-        "User-Agent": "Mozilla/5.0"
-    },
+    headers={"User-Agent": "Mozilla/5.0"},
     timeout=30
-)
+).text
 
-print("status:", response.status_code)
-print(response.text[:1000])
+soup = BeautifulSoup(html, "html.parser")
+
+for script in soup.find_all("script"):
+    src = script.get("src")
+    if src:
+        print(src)
