@@ -10,3 +10,9 @@ def get_race_data():
         "&dispid=PJ0315"
         "&type=JSJ048"
     )
+     data = requests.get(
+        url,
+        headers={"User-Agent": "Mozilla/5.0"},
+        timeout=30
+    ).json()
+    return data
