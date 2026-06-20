@@ -18,8 +18,13 @@ for race in data["RaceList"]:
     else:
         continue
 
-    print("場:", race["keirinjoName"])
-    print("グレード:", race["gradeIconName"])
-    print("何日目:", race["nichijiIconName"])
-    print("区分:", session)
-    print("------------------")
+    item = {
+        "name": race["keirinjoName"],
+        "grade": race["gradeIconName"],
+        "status": race["nichijiIconName"],
+        "session": session
+    }
+
+    print(item)
+
+    
