@@ -1,17 +1,24 @@
 import requests
-from bs4 import BeautifulSoup
 
-url = "https://keirin.jp/pc/top"
+files = [
+    "/pc/static/js/commonJSON.js",
+    "/pc/static/js/PC0101.js",
+    "/pc/static/js/PC0101_v.js",
+    "/pc/static/js/PC0101_c.js",
+    "/pc/static/js/PC0102.js",
+]
 
-html = requests.get(
-    url,
-    headers={"User-Agent": "Mozilla/5.0"},
-    timeout=30
-).text
+for f in files:
+    url = "https://keirin.jp" + f
 
-soup = BeautifulSoup(html, "html.parser")
+    print("\n" + "=" * 80)
+    print(url)
+    print("=" * 80)
 
-for script in soup.find_all("script"):
-    src = script.get("src")
-    if src:
-        print(src)
+    r = requests.get(
+        url,
+        headers={"User-Agent": "Mozilla/5.0"},
+        timeout=30
+    )
+
+    print(r.text[:5000])
