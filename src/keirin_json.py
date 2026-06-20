@@ -2,4 +2,11 @@ import requests
 DAY_CODES = {"1"}
 NIGHT_CODES = {"3"}
 def get_race_data():
-    pass
+    url = (
+        "https://keirin.jp/pc/json"
+        "?kaisaibikbn=0"
+        "&kanyusyaflg=false"
+        "&shccp=0"
+        "&dispid=PJ0315"
+        "&type=JSJ048"
+    )
