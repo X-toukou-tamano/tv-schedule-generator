@@ -1,30 +1,18 @@
 import requests
-import re
+import json
 
-targets = [
-    "https://keirin.jp/pc/static/js/commonJSON.js",
-    "https://keirin.jp/pc/static/js/PC0101.js",
-    "https://keirin.jp/pc/static/js/PC0101_v.js",
-    "https://keirin.jp/pc/static/js/PC0101_c.js",
-]
+url = "https://keirin.jp/pc/json?kaisaibikbn=0&kanyusyaflg=false&shccp=0&dispid=PJ0315&type=JSJ048"
 
-patterns = [
-    r'https?://[^"\']+',
-    r'/[A-Za-z0-9_/\-\.]+json[A-Za-z0-9_/\-\.]*',
-    r'/[A-Za-z0-9_/\-\.]+xml[A-Za-z0-9_/\-\.]*',
-]
+data = requests.get(
+    url,
+    headers={"User-Agent": "Mozilla/5.0"},
+    timeout=30
+).json()
 
-for url in targets:
-    print("\n" + "=" * 80)
-    print(url)
-    print("=" * 80)
-
-    text = requests.get(
-        url,
-        headers={"User-Agent": "Mozilla/5.0"},
-        timeout=30
-    ).text
-
-    for p in patterns:
-        for m in re.findall(p, text, re.IGNORECASE):
-            print(m)
+for race in data["RaceList"]:
+    print(
+        race["keirinjoName"],
+        race["gradeIconName"],
+        race["nichijiIconName"],
+        race["kubunIconName"]
+    )
