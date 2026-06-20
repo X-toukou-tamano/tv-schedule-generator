@@ -1,7 +1,16 @@
 import requests
-import json
 
-url = "https://keirin.jp/pc/json?kaisaibikbn=0&kanyusyaflg=false&shccp=0&dispid=PJ0315&type=JSJ048"
+DAY_CODES = {"1"}
+NIGHT_CODES = {"3"}
+
+url = (
+    "https://keirin.jp/pc/json"
+    "?kaisaibikbn=0"
+    "&kanyusyaflg=false"
+    "&shccp=0"
+    "&dispid=PJ0315"
+    "&type=JSJ048"
+)
 
 data = requests.get(
     url,
@@ -9,10 +18,29 @@ data = requests.get(
     timeout=30
 ).json()
 
+day = []
+night = []
+
 for race in data["RaceList"]:
-    print(
-        race["keirinjoName"],
-        race["gradeIconName"],
-        race["nichijiIconName"],
-        race["kubunIconName"]
-    )
+
+    code = race["kubunIconName"]
+
+    if code not in DAY_CODES and code not in NIGHT_CODES:
+        continue
+
+    item = {
+        "name": race["keirinjoName"],
+        "grade": race["gradeIconName"],
+        "status": race["nichijiIconName"],
+    }
+
+    if code in NIGHT_CODES:
+        night.append(item)
+    else:
+        day.append(item)
+
+print("DAY")
+print(day)
+
+print("NIGHT")
+print(night)
