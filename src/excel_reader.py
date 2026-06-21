@@ -1,6 +1,9 @@
+from datetime import datetime
+
 def get_today_tracks():
 
-    return [
-        "平塚",
-        "函館"
-    ]
+    today = datetime.today()
+
+    print(today)
+
+    return []
