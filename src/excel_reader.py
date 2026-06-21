@@ -1,5 +1,6 @@
-from excel_reader import get_today_tracks
+def get_today_tracks():
 
-tracks = get_today_tracks()
-
-print(tracks)
+    return [
+        "平塚",
+        "函館"
+    ]
