@@ -22,11 +22,11 @@ create_tables()
 LOGIN_ID = "tamano-keirin_TVroom"
 LOGIN_PASSWORD = "tamano0401"
 
+```python
 @app.route("/", methods=["GET", "POST"])
 def login():
 
-```
-if request.method == "POST":
+    if request.method == "POST":
 
     username = request.form["username"]
     password = request.form["password"]
