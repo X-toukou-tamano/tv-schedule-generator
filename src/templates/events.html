@@ -1,1 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>開催一覧</title>
+</head>
+<body>
 
+<h1>開催一覧</h1>
+
+<table border="1">
+
+<tr>
+    <th>日付</th>
+    <th>開催場</th>
+</tr>
+
+{% for row in rows %}
+<tr>
+    <td>{{ row[0] }}</td>
+    <td>{{ row[1] }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</body>
+</html>
