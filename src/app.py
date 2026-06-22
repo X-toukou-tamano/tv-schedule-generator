@@ -14,7 +14,7 @@ save_records,
 get_events
 )
 
-app = Flask(**name**)
+app = Flask(__name__)
 app.secret_key = "tamano-tvppt-secret-key"
 
 create_tables()
