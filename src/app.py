@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request, render_template
 from excel_reader import parse_excel
-from database import create_tables
+from database import create_tables, save_records
 
 app = Flask(__name__)
 create_tables()
@@ -24,7 +24,7 @@ def upload():
         excel.save(file_path)
 
         records = parse_excel(file_path)
-
+        save_records(records)
         return render_template(
             "upload.html",
             message=f"{excel.filename} を保存しました",
