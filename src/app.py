@@ -25,7 +25,7 @@ LOGIN_PASSWORD = "tamano0401"
 @app.route("/", methods=["GET", "POST"])
 def login():
 
-if request.method == "POST":
+    if request.method == "POST":
 
     username = request.form["username"]
     password = request.form["password"]
