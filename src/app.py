@@ -24,8 +24,7 @@ LOGIN_PASSWORD = "tamano0401"
 
 @app.route("/", methods=["GET", "POST"])
 def login():
-
-if request.method == "POST":
+    if request.method == "POST":
 
     username = request.form["username"]
     password = request.form["password"]
@@ -46,11 +45,9 @@ if request.method == "POST":
 return render_template(
     "login.html"
 )
-
 @app.route("/dashboard", methods=["GET", "POST"])
 def dashboard():
-
-if not session.get("logged_in"):
+    if not session.get("logged_in"):
     return redirect("/")
 
 message = None
@@ -82,11 +79,9 @@ return render_template(
     "dashboard.html",
     message=message
 )
-
 @app.route("/events")
 def events():
-
-if not session.get("logged_in"):
+    if not session.get("logged_in"):
     return redirect("/")
 
 rows = get_events()
@@ -95,14 +90,11 @@ return render_template(
     "events.html",
     rows=rows
 )
-
 @app.route("/logout")
 def logout():
-
-session.clear()
+    session.clear()
 
 return redirect("/")
-
 if name == "main":
 app.run(
 host="0.0.0.0",
