@@ -27,8 +27,8 @@ def login():
 
     if request.method == "POST":
 
-    username = request.form["username"]
-    password = request.form["password"]
+        username = request.form["username"]
+        password = request.form["password"]
 
     if (
         username == LOGIN_ID and
