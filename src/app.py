@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request
 
 app = Flask(__name__)
@@ -6,8 +7,21 @@ app = Flask(__name__)
 def index():
     return "TV用パワポ自動化システム"
 
-@app.route("/upload")
+@app.route("/upload", methods=["GET", "POST"])
 def upload():
+
+    if request.method == "POST":
+
+        os.makedirs("uploads", exist_ok=True)
+
+        excel = request.files["excel"]
+
+        excel.save(
+            f"uploads/{excel.filename}"
+        )
+
+        return f"{excel.filename} を保存しました"
+
     return """
     <h1>Excelアップロード</h1>
 
