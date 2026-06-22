@@ -60,7 +60,11 @@ def parse_excel(excel_path):
 
     return records
 def get_today_tracks():
-    return [
-        "玉野",
-        "岸和田"
-    ]
+    records = parse_excel("sample.xlsx")
+
+    tracks = []
+
+    for record in records:
+        tracks.append(record["venue"])
+
+    return tracks
