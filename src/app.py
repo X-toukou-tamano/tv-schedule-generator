@@ -43,7 +43,9 @@ if request.method == "POST":
         message="ログイン失敗"
     )
 
-return render_template("login.html")
+return render_template(
+    "login.html"
+)
 
 @app.route("/dashboard", methods=["GET", "POST"])
 def dashboard():
