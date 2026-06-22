@@ -29,6 +29,7 @@ def create_tables():
 
     conn.close()
 
+
 def save_records(records):
 
     conn = get_connection()
@@ -78,3 +79,26 @@ def get_events():
     conn.close()
 
     return rows
+
+
+def get_summary():
+
+    conn = get_connection()
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            MIN(event_date),
+            MAX(event_date),
+            COUNT(*)
+        FROM calendar_events
+        """
+    )
+
+    row = cursor.fetchone()
+
+    conn.close()
+
+    return row
