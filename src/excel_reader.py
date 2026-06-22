@@ -59,12 +59,3 @@ def parse_excel(excel_path):
                     )
 
     return records
-def get_today_tracks():
-    records = parse_excel("sample.xlsx")
-
-    tracks = []
-
-    for record in records:
-        tracks.append(record["venue"])
-
-    return tracks
