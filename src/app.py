@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request
+from flask import Flask, request, render_template
 from excel_reader import parse_excel
 
 app = Flask(__name__)
@@ -25,16 +25,7 @@ def upload():
 
         return str(records[:5])
 
-    return """
-    <h1>Excelアップロード</h1>
-
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="excel">
-        <button type="submit">
-            アップロード
-        </button>
-    </form>
-    """
+    return render_template("upload.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
