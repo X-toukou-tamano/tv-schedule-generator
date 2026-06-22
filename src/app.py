@@ -38,14 +38,14 @@ def login():
 
         return redirect("/dashboard")
 
-    return render_template(
-        "login.html",
-        message="ログイン失敗"
-    )
+        return render_template(
+            "login.html",
+            message="ログイン失敗"
+        )
 
-return render_template(
-    "login.html"
-)
+    return render_template(
+        "login.html"
+    )
 
 @app.route("/dashboard", methods=["GET", "POST"])
 def dashboard():
