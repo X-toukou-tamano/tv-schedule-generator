@@ -1,19 +1,11 @@
 import sqlite3
 
-
 def get_connection():
-
-    conn = sqlite3.connect(
-        "tv_schedule.db"
-    )
-
+    conn = sqlite3.connect("tv_schedule.db")
     return conn
 
-
 def create_tables():
-
     conn = get_connection()
-
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -26,42 +18,43 @@ def create_tables():
     """)
 
     conn.commit()
-
     conn.close()
-
 
 def save_records(records):
+    if not records:
+        return
 
     conn = get_connection()
-
     cursor = conn.cursor()
 
-    for record in records:
+    # ① 更新対応：アップロードされたデータに含まれる日付の既存レコードを削除
+    # （対象日のみ一旦リセットすることで、開催中止などによる「データの消失」も正確に反映する）
+    unique_dates = list(set([str(record["date"]) for record in records]))
+    
+    # SQLiteでIN句を使うためのプレースホルダー(?, ?, ...)を動的に生成
+    placeholders = ",".join(["?"] * len(unique_dates))
+    
+    cursor.execute(
+        f"DELETE FROM calendar_events WHERE event_date IN ({placeholders})", 
+        unique_dates
+    )
 
-        cursor.execute(
-            """
-            INSERT OR IGNORE INTO calendar_events
-            (
-                event_date,
-                venue_name
-            )
-            VALUES (?, ?)
-            """,
-            (
-                str(record["date"]),
-                record["venue"]
-            )
-        )
+    # ② 高速化：executemany で一括インサート
+    data_to_insert = [(str(record["date"]), record["venue"]) for record in records]
+    
+    cursor.executemany(
+        """
+        INSERT INTO calendar_events (event_date, venue_name)
+        VALUES (?, ?)
+        """,
+        data_to_insert
+    )
 
     conn.commit()
-
     conn.close()
 
-
 def get_events():
-
     conn = get_connection()
-
     cursor = conn.cursor()
 
     cursor.execute(
@@ -75,16 +68,12 @@ def get_events():
     )
 
     rows = cursor.fetchall()
-
     conn.close()
 
     return rows
 
-
 def get_summary():
-
     conn = get_connection()
-
     cursor = conn.cursor()
 
     cursor.execute(
@@ -98,7 +87,6 @@ def get_summary():
     )
 
     row = cursor.fetchone()
-
     conn.close()
 
     return row
