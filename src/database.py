@@ -20,7 +20,8 @@ def create_tables():
     CREATE TABLE IF NOT EXISTS calendar_events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         event_date TEXT NOT NULL,
-        venue_name TEXT NOT NULL
+        venue_name TEXT NOT NULL,
+        UNIQUE(event_date, venue_name)
     )
     """)
 
@@ -39,7 +40,7 @@ def save_records(records):
 
         cursor.execute(
             """
-            INSERT INTO calendar_events
+            INSERT OR IGNORE INTO calendar_events
             (
                 event_date,
                 venue_name
