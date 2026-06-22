@@ -25,7 +25,8 @@ def upload():
 
         return render_template(
             "upload.html",
-            message=f"{excel.filename} を保存しました"
+            message=f"{excel.filename} を保存しました",
+            count=len(records)
         )
 
     return render_template("upload.html")
