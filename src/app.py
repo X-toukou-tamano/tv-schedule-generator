@@ -1,8 +1,10 @@
 import os
 from flask import Flask, request, render_template
 from excel_reader import parse_excel
+from database import create_tables
 
 app = Flask(__name__)
+create_tables()
 
 @app.route("/")
 def index():
