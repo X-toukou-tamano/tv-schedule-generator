@@ -1,7 +1,7 @@
 import os
 from flask import Flask, request, render_template
 from excel_reader import parse_excel
-from database import create_tables, save_records
+from database import create_tables, save_records, get_events
 
 app = Flask(__name__)
 create_tables()
@@ -33,6 +33,15 @@ def upload():
         )
 
     return render_template("upload.html")
+    
+@app.route("/events")
+def events():
 
+    rows = get_events()
+
+    return render_template(
+        "events.html",
+        rows=rows
+    )
 if __name__ == "__main__":
     app.run(debug=True)
