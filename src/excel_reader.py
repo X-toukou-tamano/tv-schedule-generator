@@ -113,8 +113,10 @@ def extract_venues(ws, target_col, block_col, merged_map):
             if cleaned_block != "":
                 if cleaned_block in TARGET_BLOCKS:
                     current_block = cleaned_block
-                    continue
+                    # 【修正】ここにあった continue を削除しました！
+                    # 結合セルの場合、この行自体に開催場データがあるため読み飛ばしてはいけない
                 else:
+                    # ターゲット以外のブロック（サテライト等）に入ったらリセット
                     current_block = None
 
         if current_block not in TARGET_BLOCKS:
