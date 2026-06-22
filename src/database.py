@@ -29,7 +29,6 @@ def create_tables():
 
     conn.close()
 
-
 def save_records(records):
 
     conn = get_connection()
@@ -56,3 +55,26 @@ def save_records(records):
     conn.commit()
 
     conn.close()
+
+
+def get_events():
+
+    conn = get_connection()
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            event_date,
+            venue_name
+        FROM calendar_events
+        ORDER BY event_date
+        """
+    )
+
+    rows = cursor.fetchall()
+
+    conn.close()
+
+    return rows
