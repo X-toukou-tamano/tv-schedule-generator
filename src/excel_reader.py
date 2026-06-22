@@ -78,6 +78,13 @@ def resolve_year(filename, month):
         return fiscal_year
     return fiscal_year + 1
 
+def clean_block_name(name):
+    """表記揺れを吸収するためのヘルパー関数"""
+    if not isinstance(name, str):
+        return name
+    # 全角半角スペースを除去し、半角&を全角＆に統一
+    return name.replace(" ", "").replace(" ", "").replace("&", "＆").strip()
+
 def find_block_column(ws, merged_map):
     """
     列固定禁止仕様への対応：
@@ -86,9 +93,12 @@ def find_block_column(ws, merged_map):
     for row in range(1, min(ws.max_row + 1, 100)):
         for col in range(1, 10):
             val = get_merged_value(ws.cell(row, col), merged_map)
-            if isinstance(val, str) and val.strip() in TARGET_BLOCKS:
+            cleaned_val = clean_block_name(val)
+            if isinstance(cleaned_val, str) and cleaned_val in TARGET_BLOCKS:
+                print(f"  -> [DEBUG] Target block found at column {col} (Matched: {cleaned_val})")
                 return col
-    # 見つからなかった場合のフォールバック
+                
+    print("  -> [DEBUG] Target block NOT found! Defaulting to column 2.")
     return 2 
 
 def extract_venues(ws, target_col, block_col, merged_map):
@@ -97,12 +107,12 @@ def extract_venues(ws, target_col, block_col, merged_map):
 
     for row in range(1, ws.max_row + 1):
         block_name = get_merged_value(ws.cell(row, block_col), merged_map)
+        cleaned_block = clean_block_name(block_name)
 
-        if isinstance(block_name, str):
-            block_name = block_name.strip()
-            if block_name != "":
-                if block_name in TARGET_BLOCKS:
-                    current_block = block_name
+        if isinstance(cleaned_block, str):
+            if cleaned_block != "":
+                if cleaned_block in TARGET_BLOCKS:
+                    current_block = cleaned_block
                     continue
                 else:
                     current_block = None
