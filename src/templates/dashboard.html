@@ -2,72 +2,181 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>TV用パワポ自動化システム</title>
 
 <style>
 
 body{
-    font-family:sans-serif;
-    margin:30px;
+    font-family: sans-serif;
+    margin: 30px;
+    background: #f8f9fa;
 }
 
-.drop-area{
-    width:500px;
-    height:150px;
-    border:3px dashed #999;
-    border-radius:10px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    margin-bottom:30px;
+.container{
+    max-width: 900px;
+    margin: auto;
 }
 
-.info-box{
-    background:#f5f5f5;
-    padding:15px;
-    margin-bottom:20px;
+.card{
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+h1{
+    margin-bottom: 30px;
+}
+
+h2{
+    margin-top: 0;
+}
+
+.info{
+    line-height: 2;
+    font-size: 18px;
+}
+
+.upload-box{
+    border: 3px dashed #999;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    background: #fafafa;
+}
+
+input[type=file]{
+    margin-top: 15px;
+}
+
+button{
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.download-btn{
+    display: inline-block;
+    padding: 12px 24px;
+    background: #0d6efd;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.logout{
+    display: inline-block;
+    margin-top: 20px;
+    color: #dc3545;
+    text-decoration: none;
+}
+
+.message{
+    color: green;
+    font-weight: bold;
 }
 
 </style>
-
 </head>
+
 <body>
 
-<h1>TV用パワポ自動化システム</h1>
+<div class="container">
 
-<div class="info-box">
+    <h1>TV用パワポ自動化システム</h1>
 
-    <h3>現在登録中の開催データ</h3>
+    <div class="card">
 
-    <p>最新更新日：未登録</p>
+        <h2>現在登録中の開催データ</h2>
 
-    <p>データ期間：未登録</p>
+        <div class="info">
+
+            <div>
+                最新Excel更新日時：
+                {{ latest_upload[0] if latest_upload else "未登録" }}
+            </div>
+
+            <div>
+                登録期間：
+                {{ summary[0] if summary else "-" }}
+                ～
+                {{ summary[1] if summary else "-" }}
+            </div>
+
+            <div>
+                登録件数：
+                {{ summary[2] if summary else 0 }} 件
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h2>開催カレンダー更新</h2>
+
+        {% if message %}
+        <p class="message">
+            {{ message }}
+        </p>
+        {% endif %}
+
+        <form
+            action="/upload"
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            <div class="upload-box">
+
+                Excelファイルを選択してください
+
+                <br><br>
+
+                <input
+                    type="file"
+                    name="excel"
+                    accept=".xlsx,.xls"
+                    required
+                >
+
+            </div>
+
+            <button type="submit">
+                アップロード
+            </button>
+
+        </form>
+
+    </div>
+
+    <div class="card">
+
+        <h2>最新PowerPoint</h2>
+
+        <a
+            href="/download"
+            class="download-btn"
+        >
+            ダウンロード
+        </a>
+
+    </div>
+
+    <a
+        href="/logout"
+        class="logout"
+    >
+        ログアウト
+    </a>
 
 </div>
-
-<h2>開催カレンダーExcel</h2>
-
-<div class="drop-area">
-
-    Excelをここへドラッグ
-
-</div>
-
-<h2>PowerPointテンプレート</h2>
-
-<div class="drop-area">
-
-    PowerPointをここへドラッグ
-
-</div>
-
-<p>
-    <a href="/events">開催一覧を見る</a>
-</p>
-
-<p>
-    <a href="/logout">ログアウト</a>
-</p>
 
 </body>
 </html>
