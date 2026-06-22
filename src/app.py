@@ -25,27 +25,27 @@ LOGIN_PASSWORD = "tamano0401"
 @app.route("/", methods=["GET", "POST"])
 def login():
 
-    if request.method == "POST":
+if request.method == "POST":
 
-        username = request.form["username"]
-        password = request.form["password"]
+    username = request.form["username"]
+    password = request.form["password"]
 
-        if (
-            username == LOGIN_ID and
-            password == LOGIN_PASSWORD
-        ):
-            session["logged_in"] = True
+    if (
+        username == LOGIN_ID and
+        password == LOGIN_PASSWORD
+    ):
+        session["logged_in"] = True
 
         return redirect("/dashboard")
 
-        return render_template(
-            "login.html",
-            message="ログイン失敗"
-        )
-
     return render_template(
-        "login.html"
+        "login.html",
+        message="ログイン失敗"
     )
+
+return render_template(
+    "login.html"
+)
 
 @app.route("/dashboard", methods=["GET", "POST"])
 def dashboard():
