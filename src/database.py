@@ -27,3 +27,31 @@ def create_tables():
     conn.commit()
 
     conn.close()
+
+
+def save_records(records):
+
+    conn = get_connection()
+
+    cursor = conn.cursor()
+
+    for record in records:
+
+        cursor.execute(
+            """
+            INSERT INTO calendar_events
+            (
+                event_date,
+                venue_name
+            )
+            VALUES (?, ?)
+            """,
+            (
+                str(record["date"]),
+                record["venue"]
+            )
+        )
+
+    conn.commit()
+
+    conn.close()
