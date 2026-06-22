@@ -30,10 +30,10 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-    if (
-        username == LOGIN_ID and
-        password == LOGIN_PASSWORD
-    ):
+        if (
+            username == LOGIN_ID and
+            password == LOGIN_PASSWORD
+        ):
         session["logged_in"] = True
 
         return redirect("/dashboard")
