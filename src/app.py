@@ -23,7 +23,10 @@ def upload():
 
         records = parse_excel(file_path)
 
-        return str(records[:5])
+        return render_template(
+            "upload.html",
+            message="保存成功"
+        )
 
     return render_template("upload.html")
 
