@@ -37,7 +37,7 @@ def login():
         ):
             session["logged_in"] = True
 
-            return redirect("/upload")
+            return redirect("/dashboard")
 
         return render_template(
             "login.html",
@@ -81,6 +81,13 @@ def upload():
 
     return render_template("upload.html")
 
+@app.route("/dashboard")
+def dashboard():
+
+    if not session.get("logged_in"):
+        return redirect("/")
+
+    return render_template("dashboard.html")
 
 @app.route("/events")
 def events():
