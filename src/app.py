@@ -1,5 +1,6 @@
 import os
 from flask import Flask, request
+from excel_reader import parse_excel
 
 app = Flask(__name__)
 
@@ -16,22 +17,24 @@ def upload():
 
         excel = request.files["excel"]
 
-        excel.save(
-            f"uploads/{excel.filename}"
-        )
+        file_path = f"uploads/{excel.filename}"
 
-        return f"{excel.filename} を保存しました"
+        excel.save(file_path)
 
-    return """
-    <h1>Excelアップロード</h1>
+        records = parse_excel(file_path)
 
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="excel">
-        <button type="submit">
-            アップロード
-        </button>
-    </form>
-    """
+        return str(records[:5])
 
-if __name__ == "__main__":
-    app.run(debug=True)
+        return """
+            <h1>Excelアップロード</h1>
+
+        <form method="post" enctype="multipart/form-data">
+            <input type="file" name="excel">
+            <button type="submit">
+                アップロード
+            </button>
+        </form>
+        """
+
+    if __name__ == "__main__":
+        app.run(debug=True)
