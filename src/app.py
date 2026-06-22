@@ -25,16 +25,16 @@ def upload():
 
         return str(records[:5])
 
-        return """
-            <h1>Excelアップロード</h1>
+    return """
+    <h1>Excelアップロード</h1>
 
-        <form method="post" enctype="multipart/form-data">
-            <input type="file" name="excel">
-            <button type="submit">
-                アップロード
-            </button>
-        </form>
-        """
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="excel">
+        <button type="submit">
+            アップロード
+        </button>
+    </form>
+    """
 
-    if __name__ == "__main__":
-        app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
