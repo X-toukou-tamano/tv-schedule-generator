@@ -21,6 +21,9 @@ from database import (
 from keirin_json import get_race_data
 from event_sorter import split_and_sort_events
 
+# 新設したダウンロード制御用ファイルをインポート
+from download_handler import handle_pptx_download
+
 app = Flask(__name__)
 app.secret_key = "tamano-tvppt-secret-key"
 
@@ -128,6 +131,14 @@ def dashboard():
 
     (day_text_list, night_text_list), today_str = get_today_sorted_data()
 
+    # ダッシュボード表示のタイミングで、内部的に最新データに基づいたPowerPointを事前生成しておく
+    # これにより、ダウンロードボタン押下時のレスポンスを高め、データ破損リスクを事前に検知できます
+    try:
+        from ppt_generator import create_powerpoint
+        create_powerpoint(day_text_list, night_text_list)
+    except Exception as e:
+        print(f"[WARNING] ダッシュボード表示時の事前PPT生成に失敗しました: {e}")
+
     return render_template(
         "dashboard.html",
         message=message,
@@ -141,20 +152,26 @@ def dashboard():
     )
 
 
-# 【修正】登録された全日程スケジュールの一覧を出すカレンダー確認ページ
 @app.route("/events")
 def events():
     if not session.get("logged_in"):
         return redirect("/")
 
-    # database.py から登録済みのすべてのスケジュール（上期・下期すべて）を取得
     rows = get_events()
-
-    # テンプレート側へすべての行（rows）を引き渡して表示する
     return render_template(
         "events.html",
         rows=rows
     )
+
+
+# 【ルーティング】修正されたdownload_handlerへセッションとソートデータを引き渡して処理を委託
+@app.route("/download")
+def download_powerpoint():
+    # 本日のソート済み放映テキストを取得
+    (day_text_list, night_text_list), today_str = get_today_sorted_data()
+    
+    # 処理自体は完全に外部ファイルへ委託し、その結果（ファイル返却）をブラウザへ流す
+    return handle_pptx_download(session, day_text_list, night_text_list)
 
 
 @app.route("/logout")
