@@ -1,27 +1,20 @@
-import os
 import datetime
-from flask import (
-    Flask,
-    request,
-    render_template,
-    redirect,
-    session
-)
+import os
+from flask import Flask, redirect, render_template, request, session
 
-from excel_reader import parse_excel
 from database import (
     create_tables,
-    save_records,
     get_events,
     get_summary,
+    get_update_time,
+    save_records,
     save_update_time,
-    get_update_time
 )
-
-from keirin_json import get_race_data
-from event_sorter import split_and_sort_events
-from ppt_generator import parse_event_text, create_powerpoint
 from download_handler import handle_pptx_download
+from event_sorter import split_and_sort_events
+from excel_reader import parse_excel
+from keirin_json import get_race_data
+from ppt_generator import create_powerpoint, parse_event_text
 
 app = Flask(__name__)
 app.secret_key = "tamano-tvppt-secret-key"
@@ -33,9 +26,7 @@ LOGIN_PASSWORD = "tamano0401"
 
 
 def get_today_sorted_data():
-    """
-    本日分の放映テキストリストを取得し、HTMLプレビュー用にパーツ分解した辞書配列も一緒に作成する
-    """
+    """本日分の放映テキストリストを取得し、HTMLプレビュー用にパーツ分解した辞書配列も一緒に作成する"""
     rows = get_events()
     today_str = datetime.date.today().isoformat()
 
@@ -70,21 +61,23 @@ def get_today_sorted_data():
             status_text = info.get("nichijiIconName", "-")
             grade_text = info.get("gradeIconName", "-")
 
-            today_merged_data.append({
-                "name": venue_name,
-                "session": session_type,
-                "grade": grade_text,
-                "status": status_text
-            })
+            today_merged_data.append(
+                {
+                    "name": venue_name,
+                    "session": session_type,
+                    "grade": grade_text,
+                    "status": status_text,
+                }
+            )
 
     day_text_list, night_text_list = split_and_sort_events(today_merged_data)
-    
+
     # 【追加】HTMLプレビューが絶対にバグらないよう、サーバー側でパーツをあらかじめ分解する
     preview_night = []
     for txt in night_text_list:
         n, g, s = parse_event_text(txt)
         preview_night.append({"name": n, "grade": g, "status": s})
-        
+
     preview_day = []
     for txt in day_text_list:
         n, g, s = parse_event_text(txt)
@@ -99,7 +92,7 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        if (username == LOGIN_ID and password == LOGIN_PASSWORD):
+        if username == LOGIN_ID and password == LOGIN_PASSWORD:
             session["logged_in"] = True
             return redirect("/dashboard")
 
@@ -123,7 +116,7 @@ def dashboard():
         records = parse_excel(file_path)
         save_records(records)
         save_update_time()
-        
+
         message = f"{excel.filename} を保存・更新しました"
 
     db_summary = get_summary()
@@ -132,7 +125,10 @@ def dashboard():
     total_count = db_summary[2] if db_summary else 0
     last_update = get_update_time()
 
-    (day_text_list, night_text_list, preview_day, preview_night), today_str = get_today_sorted_data()
+    (
+        (day_text_list, night_text_list, preview_day, preview_night),
+        today_str,
+    ) = get_today_sorted_data()
 
     # ダッシュボード表示のタイミングで、裏で最新のPowerPointを生成しておく
     try:
@@ -148,8 +144,8 @@ def dashboard():
         end_date=end_date,
         total_count=total_count,
         last_update=last_update,
-        day_items=preview_day,       # HTML側での分解を不要にする
-        night_items=preview_night    # HTML側での分解を不要にする
+        day_items=preview_day,  # HTML側での分解を不要にする
+        night_items=preview_night,  # HTML側での分解を不要にする
     )
 
 
