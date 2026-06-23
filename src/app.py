@@ -110,13 +110,14 @@ def events():
     except Exception as e:
         print(f"[WARNING] 公式JSONの読み込みに失敗しました: {e}")
 
-    # 3. 本日開催のデータを仕様書通り1つのデータオブジェクトとして記憶・整理する
+    # 3. 本日のデータだけを抽出して公式JSONとマージ
     today_merged_data = []
 
     for row in rows:
         event_date = row[0]   # DBの日付文字列 (YYYY-MM-DD)
         venue_name = row[1]   # DBの場名文字列 (例: "小田原", "久留米")
 
+        # 【厳格化】日付が「今日」であるデータのみを対象にする
         if event_date == today_str and venue_name in vinfo_map:
             info = vinfo_map[venue_name]
             kubun_code = str(info.get("kubunIconName", "")).strip()
@@ -140,23 +141,16 @@ def events():
                 "status": status_text
             })
 
-    # 4. 並び替え・仕分け・完成テキスト生成の実行
+    # 4. 並び替え・仕分け・仕様書通りの完成テキスト生成
     day_text_list, night_text_list = split_and_sort_events(today_merged_data)
 
-    # デバッグ確認用
-    print("\n========================================")
-    print("【内部検証】白枠用（デイ）放映テキスト（ソート済み）:")
-    print(day_text_list)
-    print("【内部検証】青枠用（ナイター）放映テキスト（ソート済み）:")
-    print(night_text_list)
-    print("========================================\n")
-
-    # 既存の一覧表示画面の表示を維持して返す
+    # 画面側には「今日の日付」と「今日用のソート済みテキスト」だけを引き渡す
     return render_template(
         "events.html",
-        rows=rows
+        today_str=today_str,
+        day_text_list=day_text_list,
+        night_text_list=night_text_list
     )
-
 
 @app.route("/logout")
 def logout():
