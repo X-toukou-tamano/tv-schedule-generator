@@ -1,146 +1,97 @@
 <!DOCTYPE html>
-
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>TV用パワポ自動化システム</title>
-
-<style>
-
-body{
-    font-family:sans-serif;
-    background:#f5f5f5;
-    margin:30px;
-}
-
-.container{
-    max-width:900px;
-    margin:auto;
-}
-
-.card{
-    background:white;
-    border-radius:10px;
-    padding:20px;
-    margin-bottom:20px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-
-h1{
-    margin-bottom:30px;
-}
-
-h2{
-    margin-top:0;
-}
-
-.upload-box{
-    border:3px dashed #999;
-    border-radius:10px;
-    padding:40px;
-    text-align:center;
-    background:#fafafa;
-    margin-bottom:15px;
-}
-
-button{
-    padding:10px 20px;
-    font-size:16px;
-    cursor:pointer;
-}
-
-.download-btn{
-    display:inline-block;
-    padding:12px 24px;
-    background:#0d6efd;
-    color:white;
-    text-decoration:none;
-    border-radius:5px;
-}
-
-.logout{
-    color:#dc3545;
-    text-decoration:none;
-}
-
-.message{
-    color:green;
-    font-weight:bold;
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <title>自動化システム - ダッシュボード</title>
+    <style>
+        body { font-family: sans-serif; margin: 30px; background: #f8f9fa; color: #333; }
+        .container { max-width: 1000px; margin: auto; }
+        .header-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .logout-btn { color: #dc3545; text-decoration: none; font-weight: bold; }
+        
+        /* インフォメーションスタイル */
+        .info-card { background: #fff; border-left: 6px solid #0d6efd; padding: 15px 20px; border-radius: 4px; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .info-card h3 { margin: 0 0 5px 0; font-size: 16px; color: #555; }
+        .info-date { font-size: 18px; font-weight: bold; color: #0d6efd; }
+        
+        .upload-section { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .alert-success { background: #d1e7dd; color: #0f5132; padding: 12px; border-radius: 4px; margin-bottom: 15px; font-weight: bold; }
+        
+        /* プレビュー表示エリア */
+        .flex-box { display: flex; gap: 25px; margin-top: 15px; }
+        .card { flex: 1; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .blue-box { border-top: 8px solid #0056b3; }
+        .white-box { border-top: 8px solid #cccccc; }
+        .card h2 { margin-top: 0; font-size: 18px; }
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { font-size: 16px; font-weight: bold; padding: 10px 0; border-bottom: 1px solid #eee; }
+        li:last-child { border-bottom: none; }
+        .no-data { color: #888; font-style: italic; font-size: 14px; }
+    </style>
 </head>
-
 <body>
 
 <div class="container">
+    <div class="header-box">
+        <h1>競輪場内放映パワポ自動生成システム</h1>
+        <a href="/logout" class="logout-btn">ログアウト</a>
+    </div>
 
-```
-<h1>TV用パワポ自動化システム</h1>
+    <div class="info-card">
+        <h3>現在のカレンダーデータ登録状況（データベース蓄積期間）</h3>
+        {% if start_date and end_date %}
+            <div class="info-date">
+                {{ start_date }} ～ <span style="background: yellow; padding: 2px 6px; border-radius: 3px;">{{ end_date }} まで登録済み</span>
+                <span style="font-size: 14px; color: #666; font-weight: normal; margin-left: 15px;">(合計 {{ total_count }} 件のスケジュール)</span>
+            </div>
+        {% else %}
+            <div class="info-date" style="color: #dc3545;">Excelデータが未登録です。以下のフォームからアップロードしてください。</div>
+        {% endif %}
+    </div>
 
-<div class="card">
+    <div class="upload-section">
+        <h2>開催カレンダーExcelの更新・登録</h2>
+        {% if message %}
+            <div class="alert-success">{{ message }}</div>
+        {% endif %}
+        <form action="/dashboard" method="POST" enctype="multipart/form-data">
+            <input type="file" name="excel" accept=".xlsx, .xls" required style="font-size: 16px;">
+            <button type="submit" style="font-size: 16px; padding: 6px 15px; margin-left: 10px; cursor: pointer;">アップロード実行</button>
+        </form>
+    </div>
 
-    <h2>開催カレンダー更新</h2>
+    <div style="margin-top: 40px;">
+        <h2 style="margin-bottom: 5px;">本日の放映文字列リアルタイム確認（PowerPoint同期データ）</h2>
+        <div style="font-size: 14px; color: #666; margin-bottom: 15px;">対象日: <strong>{{ today_str }}</strong> の公式JSONとの自動照合結果（モーニング・ミッドナイトは除外済み）</div>
+        
+        <div class="flex-box">
+            <div class="card blue-box">
+                <h2 style="color: #0056b3;">左枠（青枠：ナイター放映用）</h2>
+                {% if night_text_list %}
+                    <ul>
+                    {% for text in night_text_list %}
+                        <li>{{ text }}</li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="no-data">本日の対象開催はありません</p>
+                {% endif %}
+            </div>
 
-    {% if message %}
-    <p class="message">
-        {{ message }}
-    </p>
-    {% endif %}
-
-    <form
-        method="POST"
-        enctype="multipart/form-data"
-    >
-
-        <div class="upload-box">
-
-            Excelファイルを選択してください
-
-            <br><br>
-
-            <input
-                type="file"
-                name="excel"
-                accept=".xlsx,.xls"
-                required
-            >
-
+            <div class="card white-box">
+                <h2 style="color: #555;">右枠（白枠：デイ放映用）</h2>
+                {% if day_text_list %}
+                    <ul>
+                    {% for text in day_text_list %}
+                        <li>{{ text }}</li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="no-data">本日の対象開催はありません</p>
+                {% endif %}
+            </div>
         </div>
-
-        <button type="submit">
-            アップロード
-        </button>
-
-    </form>
-
-</div>
-
-<div class="card">
-
-    <h2>PowerPoint</h2>
-
-    <a
-        href="/download"
-        class="download-btn"
-    >
-        ダウンロード
-    </a>
-
-</div>
-
-<div class="card">
-
-    <a href="/logout" class="logout">
-        ログアウト
-    </a>
-
-</div>
-```
-
+    </div>
 </div>
 
 </body>
