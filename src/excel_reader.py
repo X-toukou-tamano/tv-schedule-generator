@@ -5,6 +5,14 @@ from calendar import monthrange
 from datetime import date
 from openpyxl import load_workbook
 
+# --- 追加：全国の競輪場43場リスト ---
+KEIRIN_TRACKS = [
+    "函館", "青森", "いわき平", "弥彦", "前橋", "取手", "宇都宮", "大宮", "西武園", "京王閣", "立川",
+    "松戸", "川崎", "平塚", "小田原", "伊東", "静岡", "名古屋", "岐阜", "大垣", "豊橋", "富山",
+    "松阪", "四日市", "福井", "奈良", "向日町", "和歌山", "岸和田", "玉野", "広島", "防府", "高松", "小松島",
+    "高知", "松山", "小倉", "久留米", "武雄", "佐世保", "別府", "熊本"
+]
+
 TARGET_BLOCKS = [
     "玉野",
     "現金機＆CLAP"
@@ -89,6 +97,27 @@ def find_block_column(ws, merged_map):
                 return col
     return 2 
 
+# --- 追加：抽出した文字を綺麗にする関数 ---
+def normalize_venue_name(raw_name):
+    if not isinstance(raw_name, str):
+        return raw_name
+        
+    # 全角半角を統一してスペースを消去（「１－１」→「1-1」）
+    name = unicodedata.normalize('NFKC', raw_name)
+    name_no_space = name.replace(" ", "").replace(" ", "")
+
+    # 「1-1」や「2-3」など、数字とハイフンだけの構成なら「玉野」に強制変換
+    if re.match(r'^\d+-\d+$', name_no_space):
+        return "玉野"
+
+    # リストにある場名が文字列内に含まれていれば、その場名だけを引っこ抜く
+    for track in KEIRIN_TRACKS:
+        if track in name_no_space:
+            return track
+
+    # 該当しないイレギュラーな文字はそのまま返す
+    return raw_name
+
 def extract_venues(ws, target_col, block_col, merged_map):
     venues = []
     current_block = None
@@ -97,7 +126,6 @@ def extract_venues(ws, target_col, block_col, merged_map):
         block_name = get_merged_value(ws.cell(row, block_col), merged_map)
         cleaned_block = clean_block_name(block_name)
 
-        # 暴走防止：結合範囲内ならブロック名を維持、範囲外（空白や別文字）なら即リセット
         if isinstance(cleaned_block, str) and cleaned_block != "":
             if cleaned_block in TARGET_BLOCKS:
                 if current_block != cleaned_block:
@@ -121,7 +149,9 @@ def extract_venues(ws, target_col, block_col, merged_map):
         if value == "" or value in IGNORE_VALUES or value in TARGET_BLOCKS:
             continue
 
-        venues.append(value)
+        # --- 変更：ここで名前を綺麗にしてからリストに追加する ---
+        cleaned_venue = normalize_venue_name(value)
+        venues.append(cleaned_venue)
 
     return venues
 
@@ -134,7 +164,6 @@ def parse_excel(excel_path):
 
     records = []
 
-    # 「一番最初のシートのみ」を処理する
     ws = wb.worksheets[0]
     print(f"[LOG] Processing ONLY the first sheet: {ws.title}")
     
