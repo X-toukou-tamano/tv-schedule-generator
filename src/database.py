@@ -17,6 +17,14 @@ def create_tables():
     )
     """)
 
+    # 【追加】最新アップデート日時を保存するためのメタテーブル
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS system_meta (
+        meta_key TEXT PRIMARY KEY,
+        meta_value TEXT
+    )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -103,3 +111,25 @@ def get_summary():
     conn.close()
 
     return row
+
+def save_update_time():
+    import datetime
+    # 「2026/06/23 15:30:45」のような形式で現在日時を取得
+    now_str = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT OR REPLACE INTO system_meta (meta_key, meta_value)
+        VALUES ('last_update', ?)
+    """, (now_str,))
+    conn.commit()
+    conn.close()
+
+# 【追加】アップデート日時を取得する関数
+def get_update_time():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT meta_value FROM system_meta WHERE meta_key = 'last_update'")
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else None
