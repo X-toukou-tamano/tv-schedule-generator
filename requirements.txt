@@ -3,3 +3,5 @@ beautifulsoup4
 openpyxl
 Flask
 gunicorn
+python-pptx
+comtypes
