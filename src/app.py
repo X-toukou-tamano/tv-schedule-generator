@@ -126,7 +126,6 @@ def dashboard():
     total_count = db_summary[2] if db_summary else 0
     last_update = get_update_time()
 
-    # 共通関数から本日のソート済みデータを取得
     (day_text_list, night_text_list), today_str = get_today_sorted_data()
 
     return render_template(
@@ -142,21 +141,19 @@ def dashboard():
     )
 
 
-# 【復活】本日の放映予定に特化した確認専用ページ
+# 【修正】登録された全日程スケジュールの一覧を出すカレンダー確認ページ
 @app.route("/events")
 def events():
     if not session.get("logged_in"):
         return redirect("/")
 
-    # 共通関数から本日のソート済みデータを取得
-    (day_text_list, night_text_list), today_str = get_today_sorted_data()
+    # database.py から登録済みのすべてのスケジュール（上期・下期すべて）を取得
+    rows = get_events()
 
-    # 先ほど作成した本日限定表示用の templates/events.html をそのまま呼び出す
+    # テンプレート側へすべての行（rows）を引き渡して表示する
     return render_template(
         "events.html",
-        today_str=today_str,
-        day_text_list=day_text_list,
-        night_text_list=night_text_list
+        rows=rows
     )
 
 
