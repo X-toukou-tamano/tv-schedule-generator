@@ -5,26 +5,19 @@ from calendar import monthrange
 from datetime import date
 from openpyxl import load_workbook
 
-# 全国の競輪場43場リスト
+# 全国の競輪場43場リスト（ホワイトリスト）
 KEIRIN_TRACKS = [
     "函館", "青森", "いわき平", "弥彦", "前橋", "取手", "宇都宮", "大宮", "西武園", "京王閣", "立川",
-    "松戸", "川崎", "平塚", "小田原", "伊東", "静岡", "名古屋", "岐阜", "大垣", "豊橋", "富山",
+    "松戸", "千葉", "川崎", "平塚", "小田原", "伊東", "静岡", "名古屋", "岐阜", "大垣", "豊橋", "富山",
     "松阪", "四日市", "福井", "奈良", "向日町", "和歌山", "岸和田", "玉野", "広島", "防府", "高松", "小松島",
     "高知", "松山", "小倉", "久留米", "武雄", "佐世保", "別府", "熊本"
 ]
 
+# 取得対象のブロック名（印刷会社用の「玉野本場開催」も対応）
 TARGET_BLOCKS = [
     "玉野",
+    "玉野本場開催",
     "現金機＆CLAP"
-]
-
-# 一部でも含まれていれば除外するキーワード（「非開催」に統一）
-IGNORE_VALUES = [
-    "開催なし",
-    "発売中止",
-    "その他",
-    "備考",
-    "非開催"
 ]
 
 def clean_block_name(name):
@@ -101,19 +94,22 @@ def find_block_column(ws, merged_map):
 
 def normalize_venue_name(raw_name):
     if not isinstance(raw_name, str):
-        return raw_name
+        return None
         
     name = unicodedata.normalize('NFKC', raw_name)
     name_no_space = name.replace(" ", "").replace(" ", "")
 
+    # 数字とハイフンから始まるものは「玉野」
     if re.match(r'^\d+-\d+', name_no_space):
         return "玉野"
 
+    # 全国の競輪場リストと照合。一致すればその場名を返す
     for track in KEIRIN_TRACKS:
         if track in name_no_space:
             return track
 
-    return raw_name
+    # 43場にも玉野ルールにも当てはまらない文字（曜日、数値、非開催など）は完全に除外！
+    return None
 
 def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
     venues = []
@@ -140,16 +136,11 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
             continue
 
         value = str(value).strip()
-        value_no_space = value.replace(" ", "").replace(" ", "")
 
-        if value == "" or value in TARGET_BLOCKS:
-            continue
-
-        if any(ignore_word in value_no_space for ignore_word in IGNORE_VALUES):
-            continue
-
+        # ホワイトリストで判定し、有効な場名だけを取得
         cleaned_venue = normalize_venue_name(value)
-        venues.append(cleaned_venue)
+        if cleaned_venue:
+            venues.append(cleaned_venue)
 
     return venues
 
@@ -161,16 +152,22 @@ def parse_excel(excel_path):
     print(f"[LOG] workbook loaded successfully.")
 
     records = []
+    
+    # 最初のシートだけを処理
     ws = wb.worksheets[0]
+    print(f"[LOG] Processing sheet: {ws.title}")
     
     merged_map = build_merged_map(ws)
     month_map = find_months(ws, merged_map)
     
     if not month_map:
+        print(f"  -> No months found in {ws.title}, skipping.")
         return records
         
     block_col = find_block_column(ws, merged_map)
-    sorted_months = sorted(month_map.items(), key=lambda item: item[1].row)
+
+    # 月を「行」優先で並び替え
+    sorted_months = sorted(month_map.items(), key=lambda item: (item[1].row, item[1].column))
 
     for i, (month, month_cell) in enumerate(sorted_months):
         year = resolve_year(filename, month)
@@ -179,10 +176,13 @@ def parse_excel(excel_path):
 
         start_row = month_cell.row
         
-        if i + 1 < len(sorted_months):
-            end_row = sorted_months[i+1][1].row - 1
-        else:
-            end_row = ws.max_row
+        # 次の月がある場合、その直前を壁にする
+        end_row = ws.max_row
+        for j in range(i + 1, len(sorted_months)):
+            next_month_cell = sorted_months[j][1]
+            if next_month_cell.row > start_row:
+                end_row = next_month_cell.row - 1
+                break
 
         print(f"  -> Extracting: {year}年{month}月 (days: {days_in_month}, rows: {start_row}-{end_row})")
 
@@ -195,6 +195,6 @@ def parse_excel(excel_path):
                     "date": date(year, month, day),
                     "venue": venue
                 })
-                    
+                
     print(f"[LOG] parse_excel completed. Total records extracted: {len(records)}")
     return records
