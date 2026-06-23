@@ -1,4 +1,3 @@
-```python
 import os
 from copy import deepcopy
 
@@ -168,4 +167,3 @@ def create_powerpoint(day_text_list, night_text_list):
     )
 
     return output_path
-```
