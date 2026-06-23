@@ -2,56 +2,40 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>本日の放映予定一覧</title>
+    <title>登録済み開催スケジュール一覧</title>
     <style>
-        body { font-family: sans-serif; margin: 30px; background: #f5f5f5; }
-        .container { max-width: 900px; margin: auto; }
-        .date-header { font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #333; }
-        .flex-box { display: flex; gap: 30px; margin-top: 20px; }
-        .card { flex: 1; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .blue-box { border-top: 8px solid #0056b3; }
-        .white-box { border-top: 8px solid #cccccc; }
-        h2 { margin-top: 0; font-size: 22px; }
-        ul { list-style: none; padding: 0; margin: 0; }
-        li { font-size: 18px; font-weight: bold; padding: 12px 0; border-bottom: 1px solid #eee; }
-        li:last-child { border-bottom: none; }
-        .no-data { color: #888; font-style: italic; }
-        .back-link { display: inline-block; margin-top: 30px; color: #0d6efd; text-decoration: none; }
+        body { font-family: sans-serif; margin: 30px; background: #f8f9fa; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        h1 { font-size: 22px; margin-top: 0; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #e9ecef; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .back-link { display: inline-block; margin-top: 20px; color: #0d6efd; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>本日の場内放映予定確認</h1>
-    <div class="date-header">対象日: {{ today_str }}</div>
+    <h1>登録済み開催スケジュール一覧（DBデータ）</h1>
+    <p style="color: #666; font-size: 14px;">※Excelから取り込まれた上期・下期すべてのカレンダー日程です。</p>
 
-    <div class="flex-box">
-        <div class="card blue-box">
-            <h2 style="color: #0056b3;">左枠（青枠：ナイター）</h2>
-            {% if night_text_list %}
-                <ul>
-                {% for text in night_text_list %}
-                    <li>{{ text }}</li>
-                {% endfor %}
-                </ul>
-            {% else %}
-                <p class="no-data">本日の対象開催はありません</p>
-            {% endif %}
-        </div>
-
-        <div class="card white-box">
-            <h2 style="color: #555;">右枠（白枠：デイ）</h2>
-            {% if day_text_list %}
-                <ul>
-                {% for text in day_text_list %}
-                    <li>{{ text }}</li>
-                {% endfor %}
-                </ul>
-            {% else %}
-                <p class="no-data">本日の対象開催はありません</p>
-            {% endif %}
-        </div>
-    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>日付</th>
+                <th>開催場</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
     <a href="/dashboard" class="back-link">← ダッシュボードへ戻る</a>
 </div>
