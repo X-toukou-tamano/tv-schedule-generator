@@ -200,5 +200,25 @@ def create_powerpoint(day_text_list, night_text_list):
     os.makedirs("uploads", exist_ok=True)
     output_path = os.path.join("uploads", "場内放映予定.pptx")
     prs.save(output_path)
+
+    # ppt_generator.py の末尾付近に追加するイメージ
+try:
+    # Windows環境でOfficeが入っている場合の超高精度な画像化ロジック例
+    import comtypes.client
+    import time
+    
+    abs_pptx = os.path.abspath(output_path)
+    abs_png = os.path.abspath(os.path.join("static", "preview.png"))
+    os.makedirs("static", exist_ok=True)
+    
+    powerpoint = comtypes.client.CreateObject("Powerpoint.Application")
+    powerpoint.Visible = 1
+    deck = powerpoint.Presentations.Open(abs_pptx, WithWindow=False)
+    # 最初のスライドをPNGとして静的フォルダにエクスポート
+    deck.Slides[1].Export(abs_png, "PNG")
+    deck.Close()
+    powerpoint.Quit()
+except Exception as e:
+    print(f"[WARNING] 実際のパワポ画像化に失敗したため、テキストプレビューを維持します: {e}")
     
     return output_path
