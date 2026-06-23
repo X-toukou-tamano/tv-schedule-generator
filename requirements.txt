@@ -4,4 +4,3 @@ openpyxl
 Flask
 gunicorn
 python-pptx
-comtypes
