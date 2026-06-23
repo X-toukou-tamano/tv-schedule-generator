@@ -12,13 +12,11 @@ from excel_reader import parse_excel
 from database import (
     create_tables,
     save_records,
-    get_events
+    get_events,
+    get_summary  # ← 追加
 )
 
-# 【修正】実際のファイル名 keirin_json.py から取得するよう変更
 from keirin_json import get_race_data
-
-# 別ファイルに切り出した並び替え・区分けロジックをインポート
 from event_sorter import split_and_sort_events
 
 app = Flask(__name__)
@@ -60,45 +58,32 @@ def dashboard():
 
     message = None
 
+    # Excelファイルがアップロードされた場合
     if request.method == "POST":
-        os.makedirs(
-            "uploads",
-            exist_ok=True
-        )
-
+        os.makedirs("uploads", exist_ok=True)
         excel = request.files["excel"]
-
-        file_path = (
-            f"uploads/{excel.filename}"
-        )
-
+        file_path = f"uploads/{excel.filename}"
         excel.save(file_path)
 
+        # Excelを解析してDBに保存（上書き処理）
         records = parse_excel(file_path)
         save_records(records)
+        message = f"{excel.filename} を保存・更新しました"
 
-        message = (
-            f"{excel.filename} を保存しました"
-        )
+    # --- 以下、常にダッシュボードで表示するためのデータ作成処理 ---
 
-    return render_template(
-        "dashboard.html",
-        message=message
-    )
+    # 1. DBからExcelデータの登録期間（サマリー）を取得
+    # summary は (MIN(date), MAX(date), COUNT(*)) のタプル形式
+    db_summary = get_summary()
+    start_date = db_summary[0] if db_summary and db_summary[0] else None
+    end_date = db_summary[1] if db_summary and db_summary[1] else None
+    total_count = db_summary[2] if db_summary else 0
 
-
-@app.route("/events")
-def events():
-    if not session.get("logged_in"):
-        return redirect("/")
-
-    # 1. database.py から全日程スケジュールを取得
+    # 2. database.py から本日開催スケジュールを照合するために全件取得
     rows = get_events()
-
-    # YYYY-MM-DD形式の「本日」の日付文字列を取得
     today_str = datetime.date.today().isoformat()
 
-    # 2. keirin_json.py の get_race_data() から本日のJSON公式データを取得してマップ化
+    # 3. keirin_json.py から公式JSONを取得して本日分をマージ
     vinfo_map = {}
     try:
         race_data = get_race_data()
@@ -110,14 +95,11 @@ def events():
     except Exception as e:
         print(f"[WARNING] 公式JSONの読み込みに失敗しました: {e}")
 
-    # 3. 本日のデータだけを抽出して公式JSONとマージ
     today_merged_data = []
-
     for row in rows:
-        event_date = row[0]   # DBの日付文字列 (YYYY-MM-DD)
-        venue_name = row[1]   # DBの場名文字列 (例: "小田原", "久留米")
+        event_date = row[0]
+        venue_name = row[1]
 
-        # 【厳格化】日付が「今日」であるデータのみを対象にする
         if event_date == today_str and venue_name in vinfo_map:
             info = vinfo_map[venue_name]
             kubun_code = str(info.get("kubunIconName", "")).strip()
@@ -128,7 +110,6 @@ def events():
             elif kubun_code == "3":
                 session_type = "night"
             else:
-                # 5(ミッドナイト), 8(モーニング) は除外
                 continue
 
             status_text = info.get("nichijiIconName", "-")
@@ -141,16 +122,20 @@ def events():
                 "status": status_text
             })
 
-    # 4. 並び替え・仕分け・仕様書通りの完成テキスト生成
+    # 4. 並び替え・仕分けの実行
     day_text_list, night_text_list = split_and_sort_events(today_merged_data)
 
-    # 画面側には「今日の日付」と「今日用のソート済みテキスト」だけを引き渡す
     return render_template(
-        "events.html",
+        "dashboard.html",
+        message=message,
         today_str=today_str,
+        start_date=start_date,
+        end_date=end_date,
+        total_count=total_count,
         day_text_list=day_text_list,
         night_text_list=night_text_list
     )
+
 
 @app.route("/logout")
 def logout():
