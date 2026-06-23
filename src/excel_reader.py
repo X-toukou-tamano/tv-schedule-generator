@@ -18,13 +18,13 @@ TARGET_BLOCKS = [
     "現金機＆CLAP"
 ]
 
-# 一部でも含まれていれば除外するキーワード
+# 一部でも含まれていれば除外するキーワード（「非開催」に統一）
 IGNORE_VALUES = [
     "開催なし",
     "発売中止",
     "その他",
     "備考",
-    "非開催日"
+    "非開催"
 ]
 
 def clean_block_name(name):
@@ -106,7 +106,6 @@ def normalize_venue_name(raw_name):
     name = unicodedata.normalize('NFKC', raw_name)
     name_no_space = name.replace(" ", "").replace(" ", "")
 
-    # 「2-1 MNK」など、頭が「数字-数字」で始まるものはすべて「玉野」にする
     if re.match(r'^\d+-\d+', name_no_space):
         return "玉野"
 
@@ -146,7 +145,6 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
         if value == "" or value in TARGET_BLOCKS:
             continue
 
-        # 「非開催日」などの除外キーワードが含まれているかチェック
         if any(ignore_word in value_no_space for ignore_word in IGNORE_VALUES):
             continue
 
