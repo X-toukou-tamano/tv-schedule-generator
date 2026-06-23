@@ -18,13 +18,12 @@
         .nav-links { margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; display: flex; justify-content: space-between; }
         .nav-links a { color: #0d6efd; text-decoration: none; font-weight: bold; font-size: 14px; }
         
-        /* プレビュー画面の等間隔配置用レイアウトクラス */
         .preview-slide-container {
             width: 100%;
             max-width: 1000px;
             aspect-ratio: 16 / 9;
             margin: 0 auto;
-            background: #e9ecef; /* static/bg.png を配置する場合は url('/static/bg.png') no-repeat center / cover に変更可能 */
+            background: #e9ecef; 
             border: 2px solid #ccc;
             border-radius: 8px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.15);
@@ -57,7 +56,6 @@
             color: #333333;
             position: relative;
         }
-        /* 件数に応じたダイナミック上下等間隔配置 */
         .items-flex-1 { justify-content: center; height: 100%; }
         .items-flex-2 { justify-content: space-around; height: 100%; padding: 10% 0; box-sizing: border-box; }
         .items-flex-3 { justify-content: space-between; height: 100%; padding: 2% 0; box-sizing: border-box; }
@@ -98,7 +96,7 @@
     <div class="status-box">
         🗓️ <strong>システム運用情報:</strong><br>
         • 最終データ更新日時: {% if last_update %}{{ last_update }}{% else %}--{% endif %}<br>
-        • 上期版（4月〜9月）、下期版（10月〜3月）、または3ヶ月版など、どのExcelでも同一ロジックでいつでも投入・マージ可能です。<br>
+        • 上期版、下期版、または3ヶ月版など、どのExcelでも同一ロジックでいつでも投入・マージ可能です。<br>
         • 同じ日付のデータは、常に新しく取り込んだ内容が優先して上書き更新されます。
     </div>
 
@@ -124,20 +122,12 @@
             <div class="preview-box-night">
                 <div style="position: absolute; top: 10px; left: 15px; font-size: 12px; font-weight: bold; opacity: 0.5; letter-spacing: 1px;">NIGHTER (青枠)</div>
                 
-                <div class="{% if night_text_list|length == 1 %}items-flex-1{% elif night_text_list|length == 2 %}items-flex-2{% elif night_text_list|length == 3 %}items-flex-3{% else %}items-flex-4plus{% endif %}">
-                    {% for text in night_text_list %}
+                <div class="{% if night_items|length == 1 %}items-flex-1{% elif night_items|length == 2 %}items-flex-2{% elif night_items|length == 3 %}items-flex-3{% else %}items-flex-4plus{% endif %}">
+                    {% for item in night_items %}
                     <div class="row-item" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.6);">
-                        <span style="width: 35%; text-align: left; padding-left: 5%;">{{ text.split()[0].replace('ナイター','') }}</span>
-                        <span style="width: 30%; text-align: center; color: #ffdd00;">
-                            {% if 'F1' in text or 'f1' in text or 'FⅠ' in text %}FⅠ
-                            {% elif 'F2' in text or 'f2' in text or 'FⅡ' in text %}FⅡ
-                            {% elif 'G3' in text or 'g3' in text or 'GⅢ' in text %}GⅢ
-                            {% elif 'G1' in text or 'g1' in text or 'GⅠ' in text %}GⅠ
-                            {% elif 'G2' in text or 'g2' in text or 'GⅡ' in text %}GⅡ
-                            {% elif 'GP' in text or 'gp' in text %}GP
-                            {% else %}{{ text.split()[1] if text.split()|length > 1 else '' }}{% endif %}
-                        </span>
-                        <span style="width: 35%; text-align: right; padding-right: 5%;">{{ text.split()[-1] if text.split()|length > 2 else '' }}</span>
+                        <span style="width: 35%; text-align: left; padding-left: 5%;">{{ item.name }}</span>
+                        <span style="width: 30%; text-align: center; color: #ffdd00;">{{ item.grade }}</span>
+                        <span style="width: 35%; text-align: right; padding-right: 5%;">{{ item.status }}</span>
                     </div>
                     {% else %}
                     <div style="text-align: center; font-size: 18px; opacity: 0.5; padding-top: 30%;">ナイター放映予定なし</div>
@@ -148,21 +138,27 @@
             <div class="preview-box-day">
                 <div style="position: absolute; top: 10px; left: 15px; font-size: 12px; font-weight: bold; opacity: 0.4; letter-spacing: 1px;">DAY (白枠)</div>
                 
-                <div class="{% if day_text_list|length == 1 %}items-flex-1{% elif day_text_list|length == 2 %}items-flex-2{% elif day_text_list|length == 3 %}items-flex-3{% else %}items-flex-4plus{% endif %}">
-                    {% for text in day_text_list %}
+                <div class="{% if day_items|length == 1 %}items-flex-1{% elif day_items|length == 2 %}items-flex-2{% elif day_items|length == 3 %}items-flex-3{% else %}items-flex-4plus{% endif %}">
+                    {% for item in day_items %}
                     <div class="row-item">
-                        <span style="width: 35%; text-align: left; padding-left: 5%;">{{ text.split()[0] }}</span>
-                        <span style="width: 30%; text-align: center; color: #0056b3;">
-                            {% if 'F1' in text or 'f1' in text or 'FⅠ' in text %}FⅠ
-                            {% elif 'F2' in text or 'f2' in text or 'FⅡ' in text %}FⅡ
-                            {% elif 'G3' in text or 'g3' in text or 'GⅢ' in text %}GⅢ
-                            {% elif 'G1' in text or 'g1' in text or 'GⅠ' in text %}GⅠ
-                            {% elif 'G2' in text or 'g2' in text or 'GⅡ' in text %}GⅡ
-                            {% elif 'GP' in text or 'gp' in text %}GP
-                            {% else %}{{ text.split()[1] if text.split()|length > 1 else '' }}{% endif %}
-                        </span>
-                        <span style="width: 35%; text-align: right; padding-right: 5%;">{{ text.split()[-1] if text.split()|length > 2 else '' }}</span>
+                        <span style="width: 35%; text-align: left; padding-left: 5%;">{{ item.name }}</span>
+                        <span style="width: 30%; text-align: center; color: #0056b3;">{{ item.grade }}</span>
+                        <span style="width: 35%; text-align: right; padding-right: 5%;">{{ item.status }}</span>
                     </div>
                     {% else %}
                     <div style="text-align: center; font-size: 18px; opacity: 0.4; padding-top: 30%;">デイ放映予定なし</div>
                     {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="nav-links">
+        <a href="/events">📅 登録カレンダー全日程一覧（確認用）</a>
+        <a href="/logout" style="color: #dc3545;">🚪 ログアウト</a>
+    </div>
+</div>
+
+</body>
+</html>
