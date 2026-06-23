@@ -15,10 +15,10 @@ from database import (
     get_events
 )
 
-# JSON取得用の関数をインポート
-from fetch_api import get_race_data
+# 【修正】実際のファイル名 keirin_json.py から取得するよう変更
+from keirin_json import get_race_data
 
-# 【新機能】別ファイルに切り出した並び替え・区分けロジックをインポート
+# 別ファイルに切り出した並び替え・区分けロジックをインポート
 from event_sorter import split_and_sort_events
 
 app = Flask(__name__)
@@ -98,7 +98,7 @@ def events():
     # YYYY-MM-DD形式の「本日」の日付文字列を取得
     today_str = datetime.date.today().isoformat()
 
-    # 2. 別のpyファイルの get_race_data() から本日のJSON公式データを取得してマップ化
+    # 2. keirin_json.py の get_race_data() から本日のJSON公式データを取得してマップ化
     vinfo_map = {}
     try:
         race_data = get_race_data()
@@ -140,10 +140,10 @@ def events():
                 "status": status_text
             })
 
-    # 4. 【別ファイルとのバトンタッチ】並び替え・仕分け・完成テキスト生成の実行
+    # 4. 並び替え・仕分け・完成テキスト生成の実行
     day_text_list, night_text_list = split_and_sort_events(today_merged_data)
 
-    # デバッグ確認用（完璧にソートされ仕様書通りになった文字列をターミナルで確認）
+    # デバッグ確認用
     print("\n========================================")
     print("【内部検証】白枠用（デイ）放映テキスト（ソート済み）:")
     print(day_text_list)
