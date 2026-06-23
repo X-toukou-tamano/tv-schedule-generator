@@ -18,12 +18,10 @@ def parse_event_text(text):
     text = text.replace("ナイター", "")
     
     # 3. 連続するスペースを1つの半角スペースに統一して分割
-    # 例: "久留米 F1 2日目" -> ["久留米", "F1", "2日目"]
     parts = [p for p in re.split(r'\s+', text) if p]
     
     # 万が一分割が想定通りにいかなかった場合のセーフティ
     if len(parts) < 3:
-        # 分割に失敗した場合は、最低限パーツを埋める
         name = parts[0] if len(parts) > 0 else "不明"
         grade = parts[1] if len(parts) > 1 else "-"
         status = parts[2] if len(parts) > 2 else "-"
@@ -46,8 +44,6 @@ def calculate_y_positions(count, is_night):
     仕様書の「20. レイアウトルール（1件なら上下中央、2件なら上下均等…）」に基づき、
     件数に応じて1行ごとの正確な縦位置（Y座標：Inches）を計算して返す関数。
     """
-    # 青枠（ナイター）と白枠（デイ）の、文字を入れても良い有効な縦領域（高さの範囲）
-    # 例のパワポのレイアウト基準値
     top_limit = 2.0   # 上端の限界位置
     bottom_limit = 6.5 # 下端の限界位置
     center_y = 4.25    # ど真ん中の位置
@@ -55,19 +51,15 @@ def calculate_y_positions(count, is_night):
     y_positions = []
     
     if count == 1:
-        # 1件：上下中央
         y_positions.append(center_y - 0.3)
     elif count == 2:
-        # 2件：上下均等配置（上寄りと下寄り）
         y_positions.append(3.0)
         y_positions.append(5.5)
     elif count == 3:
-        # 3件：上・中・下
         y_positions.append(2.4)
         y_positions.append(center_y - 0.3)
         y_positions.append(6.1)
     else:
-        # 4件以上：全体に均等に敷き詰める
         total_height = bottom_limit - top_limit
         step = total_height / (count - 1)
         for i in range(count):
@@ -201,24 +193,27 @@ def create_powerpoint(day_text_list, night_text_list):
     output_path = os.path.join("uploads", "場内放映予定.pptx")
     prs.save(output_path)
 
-    # ppt_generator.py の末尾付近に追加するイメージ
-try:
-    # Windows環境でOfficeが入っている場合の超高精度な画像化ロジック例
-    import comtypes.client
-    import time
-    
-    abs_pptx = os.path.abspath(output_path)
-    abs_png = os.path.abspath(os.path.join("static", "preview.png"))
-    os.makedirs("static", exist_ok=True)
-    
-    powerpoint = comtypes.client.CreateObject("Powerpoint.Application")
-    powerpoint.Visible = 1
-    deck = powerpoint.Presentations.Open(abs_pptx, WithWindow=False)
-    # 最初のスライドをPNGとして静的フォルダにエクスポート
-    deck.Slides[1].Export(abs_png, "PNG")
-    deck.Close()
-    powerpoint.Quit()
-except Exception as e:
-    print(f"[WARNING] 実際のパワポ画像化に失敗したため、テキストプレビューを維持します: {e}")
-    
+    # 4. Windows/Office環境での実機プレビュー画像生成ロジック
+    try:
+        import comtypes.client
+        
+        abs_pptx = os.path.abspath(output_path)
+        # Flaskが認識できるように「static」フォルダ直下に書き出し
+        static_dir = os.path.join(os.getcwd(), "static")
+        os.makedirs(static_dir, exist_ok=True)
+        abs_png = os.path.abspath(os.path.join(static_dir, "preview.png"))
+        
+        # COMコンポーネントを叩いて裏でPowerPointを起動
+        powerpoint = comtypes.client.CreateObject("Powerpoint.Application")
+        powerpoint.Visible = 1
+        deck = powerpoint.Presentations.Open(abs_pptx, WithWindow=False)
+        
+        # スライド1枚目をPNGとしてエクスポート
+        deck.Slides[1].Export(abs_png, "PNG")
+        deck.Close()
+        powerpoint.Quit()
+        print("[SUCCESS] パワポ実物の画像を static/preview.png にエクスポートしました")
+    except Exception as e:
+        print(f"[WARNING] 実際のパワポ画像化に失敗したため、HTML簡易再現プレビューを使用します: {e}")
+        
     return output_path
