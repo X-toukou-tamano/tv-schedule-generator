@@ -1,5 +1,6 @@
 import os
 import re
+import unicodedata
 from calendar import monthrange
 from datetime import date
 from openpyxl import load_workbook
@@ -15,6 +16,14 @@ IGNORE_VALUES = [
     "その他",
     "備考"
 ]
+
+def clean_block_name(name):
+    if not isinstance(name, str):
+        return name
+    name = unicodedata.normalize('NFKC', name)
+    name = name.replace(" ", "").replace(" ", "").strip()
+    name = name.replace("&", "＆")
+    return name
 
 def build_merged_map(ws):
     merged_map = {}
@@ -36,15 +45,11 @@ def find_months(ws, merged_map):
     for row in ws.iter_rows():
         for cell in row:
             value = get_merged_value(cell, merged_map)
-
             if not isinstance(value, str):
                 continue
-
             value = value.replace(" ", "").replace(" ", "").strip()
-
             if not value.endswith("月"):
                 continue
-
             try:
                 month = int(value.replace("月", ""))
                 if 1 <= month <= 12:
@@ -62,13 +67,10 @@ def get_day1_column(ws, month_cell):
 
 def resolve_year(filename, month):
     fiscal_year = 2026 
-    
-    # 1. 西暦(4桁)がファイル名にあれば最優先
     match_year = re.search(r'(20\d{2})', filename)
     if match_year:
         fiscal_year = int(match_year.group(1))
     else:
-        # 2. なければ R〇 から計算
         match_r = re.search(r'R([0-9０-９]+)', filename, re.IGNORECASE)
         if match_r:
             r_num = int(match_r.group(1).translate(str.maketrans('０１２３４５６７８９', '0123456789')))
@@ -78,27 +80,13 @@ def resolve_year(filename, month):
         return fiscal_year
     return fiscal_year + 1
 
-def clean_block_name(name):
-    """表記揺れを吸収するためのヘルパー関数"""
-    if not isinstance(name, str):
-        return name
-    # 全角半角スペースを除去し、半角&を全角＆に統一
-    return name.replace(" ", "").replace(" ", "").replace("&", "＆").strip()
-
 def find_block_column(ws, merged_map):
-    """
-    列固定禁止仕様への対応：
-    「玉野」や「現金機＆CLAP」などのブロック名が書かれている列を動的に探す
-    """
     for row in range(1, min(ws.max_row + 1, 100)):
         for col in range(1, 10):
             val = get_merged_value(ws.cell(row, col), merged_map)
             cleaned_val = clean_block_name(val)
             if isinstance(cleaned_val, str) and cleaned_val in TARGET_BLOCKS:
-                print(f"  -> [DEBUG] Target block found at column {col} (Matched: {cleaned_val})")
                 return col
-                
-    print("  -> [DEBUG] Target block NOT found! Defaulting to column 2.")
     return 2 
 
 def extract_venues(ws, target_col, block_col, merged_map):
@@ -109,15 +97,16 @@ def extract_venues(ws, target_col, block_col, merged_map):
         block_name = get_merged_value(ws.cell(row, block_col), merged_map)
         cleaned_block = clean_block_name(block_name)
 
-        if isinstance(cleaned_block, str):
-            if cleaned_block != "":
-                if cleaned_block in TARGET_BLOCKS:
-                    current_block = cleaned_block
-                    # 【修正】ここにあった continue を削除しました！
-                    # 結合セルの場合、この行自体に開催場データがあるため読み飛ばしてはいけない
-                else:
-                    # ターゲット以外のブロック（サテライト等）に入ったらリセット
-                    current_block = None
+        # 暴走防止：結合範囲内ならブロック名を維持、範囲外（空白や別文字）なら即リセット
+        if isinstance(cleaned_block, str) and cleaned_block != "":
+            if cleaned_block in TARGET_BLOCKS:
+                if current_block != cleaned_block:
+                    print(f"    -> [DEBUG] Switched to target block: {cleaned_block}")
+                current_block = cleaned_block
+            else:
+                current_block = None
+        else:
+            current_block = None
 
         if current_block not in TARGET_BLOCKS:
             continue
@@ -141,41 +130,39 @@ def parse_excel(excel_path):
     
     filename = os.path.basename(excel_path)
     wb = load_workbook(excel_path, data_only=True)
-    print(f"[LOG] workbook loaded successfully. Sheets: {wb.sheetnames}")
+    print(f"[LOG] workbook loaded successfully.")
 
     records = []
 
-    for ws in wb.worksheets:
-        print(f"[LOG] Processing sheet: {ws.title}")
+    # 「一番最初のシートのみ」を処理する
+    ws = wb.worksheets[0]
+    print(f"[LOG] Processing ONLY the first sheet: {ws.title}")
+    
+    merged_map = build_merged_map(ws)
+    month_map = find_months(ws, merged_map)
+    
+    if not month_map:
+        print(f"  -> No months found in {ws.title}, skipping.")
+        return records
         
-        merged_map = build_merged_map(ws)
-        month_map = find_months(ws, merged_map)
-        
-        if not month_map:
-            print(f"  -> No months found in {ws.title}, skipping.")
-            continue
-            
-        # シートごとにブロック名が記載されている列を取得
-        block_col = find_block_column(ws, merged_map)
+    block_col = find_block_column(ws, merged_map)
 
-        for month, month_cell in month_map.items():
-            year = resolve_year(filename, month)
-            day1_col = get_day1_column(ws, month_cell)
-            days_in_month = monthrange(year, month)[1]
+    for month, month_cell in month_map.items():
+        year = resolve_year(filename, month)
+        day1_col = get_day1_column(ws, month_cell)
+        days_in_month = monthrange(year, month)[1]
 
-            print(f"  -> Extracting: {year}年{month}月 (days: {days_in_month})")
+        print(f"  -> Extracting: {year}年{month}月 (days: {days_in_month})")
 
-            for day in range(1, days_in_month + 1):
-                target_col = day1_col + day - 1
-                
-                # 動的に取得した block_col を渡す
-                venues = extract_venues(ws, target_col, block_col, merged_map)
+        for day in range(1, days_in_month + 1):
+            target_col = day1_col + day - 1
+            venues = extract_venues(ws, target_col, block_col, merged_map)
 
-                for venue in venues:
-                    records.append({
-                        "date": date(year, month, day),
-                        "venue": venue
-                    })
+            for venue in venues:
+                records.append({
+                    "date": date(year, month, day),
+                    "venue": venue
+                })
                     
     print(f"[LOG] parse_excel completed. Total records extracted: {len(records)}")
     return records
