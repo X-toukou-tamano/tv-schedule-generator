@@ -1,32 +1,29 @@
 import os
 from flask import abort, send_file
-from ppt_generator import create_powerpoint
 
 def handle_pptx_download(session, day_text_list, night_text_list):
     """
-    app.py から呼び出され、PowerPointの生成処理（ppt_generator）を仲介して
-    ユーザーのブラウザへ安全にファイルを返却・ダウンロードさせる制御関数。
+    uploads/場内放映予定.pptx を確実にダウンロードさせる
     """
-    # 1. 未ログイン状態のアクセスは拒否
     if not session.get("logged_in"):
         return abort(403)
 
     try:
-        # 2. ppt_generator.py を呼び出してパワポを実生成
-        output_path = create_powerpoint(day_text_list, night_text_list)
+        # プロジェクトルート直下の uploads フォルダ内を絶対パスで指定
+        target_path = os.path.join(os.getcwd(), "uploads", "場内放映予定.pptx")
         
-        # 3. 生成されたファイルが存在するかチェック
-        if not os.path.exists(output_path):
-            return abort(500, "PowerPointファイルの生成に失敗しました。")
+        if not os.path.exists(target_path):
+            print(f"[ERROR] ダウンロード対象のファイルが存在しません: {target_path}")
+            return abort(500, "パワポファイルが生成されていません。ダッシュボードからやり直してください。")
             
-        # 4. ブラウザへファイルを送信してダウンロードさせる
+        print(f"[SUCCESS] パワポファイルをクライアントへ送信します: {target_path}")
         return send_file(
-            output_path,
+            target_path,
             mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation",
             as_attachment=True,
             download_name="場内放映予定.pptx"
         )
         
     except Exception as e:
-        print(f"[ERROR] ダウンロードハンドラー内で予期せぬエラー: {e}")
+        print(f"[CRITICAL] ダウンロード処理で致命的なエラーが発生しました: {e}")
         return abort(500, f"システムエラーが発生しました: {e}")
