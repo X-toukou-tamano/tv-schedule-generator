@@ -5,7 +5,6 @@ from calendar import monthrange
 from datetime import date
 from openpyxl import load_workbook
 
-# 全国の競輪場43場リスト（ホワイトリスト）
 KEIRIN_TRACKS = [
     "函館", "青森", "いわき平", "弥彦", "前橋", "取手", "宇都宮", "大宮", "西武園", "京王閣", "立川",
     "松戸", "川崎", "平塚", "小田原", "伊東", "静岡", "名古屋", "岐阜", "大垣", "豊橋", "富山",
@@ -13,11 +12,17 @@ KEIRIN_TRACKS = [
     "高知", "松山", "小倉", "久留米", "武雄", "佐世保", "別府", "熊本"
 ]
 
-# 取得対象のブロック名（印刷会社用の「玉野本場開催」も対応）
 TARGET_BLOCKS = [
     "玉野",
-    "玉野本場開催",
     "現金機＆CLAP"
+]
+
+IGNORE_VALUES = [
+    "開催なし",
+    "発売中止",
+    "その他",
+    "備考",
+    "非開催"
 ]
 
 def clean_block_name(name):
@@ -50,16 +55,14 @@ def find_months(ws, merged_map):
             value = get_merged_value(cell, merged_map)
             if not isinstance(value, str):
                 continue
-            value = value.replace(" ", "").replace(" ", "").strip()
-            if not value.endswith("月"):
-                continue
-            try:
-                month = int(value.replace("月", ""))
-                if 1 <= month <= 12:
-                    if month not in months:
-                        months[month] = cell
-            except ValueError:
-                pass
+            
+            value = unicodedata.normalize('NFKC', value).replace(" ", "").replace(" ", "").strip()
+            
+            match = re.match(r'^([1-9]|1[0-2])月$', value)
+            if match:
+                month_num = int(match.group(1))
+                if month_num not in months:
+                    months[month_num] = cell
     return months
 
 def get_day1_column(ws, month_cell):
@@ -99,16 +102,13 @@ def normalize_venue_name(raw_name):
     name = unicodedata.normalize('NFKC', raw_name)
     name_no_space = name.replace(" ", "").replace(" ", "")
 
-    # 数字とハイフンから始まるものは「玉野」
     if re.match(r'^\d+-\d+', name_no_space):
         return "玉野"
 
-    # 全国の競輪場リストと照合。一致すればその場名を返す
     for track in KEIRIN_TRACKS:
         if track in name_no_space:
             return track
 
-    # 43場にも玉野ルールにも当てはまらない文字（曜日、数値、非開催など）は完全に除外！
     return None
 
 def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
@@ -125,7 +125,8 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
             else:
                 current_block = None
         else:
-            current_block = None
+            if current_block is not None and current_block not in TARGET_BLOCKS:
+                current_block = None
 
         if current_block not in TARGET_BLOCKS:
             continue
@@ -135,66 +136,62 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
         if value is None:
             continue
 
-        value = str(value).strip()
+        value_str = str(value).strip()
+        value_no_space = value_str.replace(" ", "").replace(" ", "")
 
-        # ホワイトリストで判定し、有効な場名だけを取得
-        cleaned_venue = normalize_venue_name(value)
+        if value_str == "" or value_str in TARGET_BLOCKS:
+            continue
+
+        if any(ignore_word in value_no_space for ignore_word in IGNORE_VALUES):
+            continue
+
+        cleaned_venue = normalize_venue_name(value_str)
         if cleaned_venue:
             venues.append(cleaned_venue)
 
     return venues
 
 def parse_excel(excel_path):
-    print(f"[LOG] parse_excel start: {excel_path}")
-    
     filename = os.path.basename(excel_path)
     wb = load_workbook(excel_path, data_only=True)
-    print(f"[LOG] workbook loaded successfully.")
-
     records = []
     
-    # 最初のシートだけを処理
-    ws = wb.worksheets[0]
-    print(f"[LOG] Processing sheet: {ws.title}")
-    
-    merged_map = build_merged_map(ws)
-    month_map = find_months(ws, merged_map)
-    
-    if not month_map:
-        print(f"  -> No months found in {ws.title}, skipping.")
-        return records
+    for ws in wb.worksheets:
+        # 隠しシートは絶対に読み込まない（前回のバグの確実な防止）
+        if ws.sheet_state != 'visible':
+            continue
+            
+        merged_map = build_merged_map(ws)
+        month_map = find_months(ws, merged_map)
         
-    block_col = find_block_column(ws, merged_map)
+        if not month_map:
+            continue
+            
+        block_col = find_block_column(ws, merged_map)
+        sorted_months = sorted(month_map.items(), key=lambda item: (item[1].row, item[1].column))
 
-    # 月を「行」優先で並び替え
-    sorted_months = sorted(month_map.items(), key=lambda item: (item[1].row, item[1].column))
+        for i, (month, month_cell) in enumerate(sorted_months):
+            year = resolve_year(filename, month)
+            day1_col = get_day1_column(ws, month_cell)
+            days_in_month = monthrange(year, month)[1]
 
-    for i, (month, month_cell) in enumerate(sorted_months):
-        year = resolve_year(filename, month)
-        day1_col = get_day1_column(ws, month_cell)
-        days_in_month = monthrange(year, month)[1]
+            start_row = month_cell.row
+            
+            end_row = ws.max_row
+            for j in range(i + 1, len(sorted_months)):
+                next_month_cell = sorted_months[j][1]
+                if next_month_cell.row > start_row:
+                    end_row = next_month_cell.row - 1
+                    break
 
-        start_row = month_cell.row
-        
-        # 次の月がある場合、その直前を壁にする
-        end_row = ws.max_row
-        for j in range(i + 1, len(sorted_months)):
-            next_month_cell = sorted_months[j][1]
-            if next_month_cell.row > start_row:
-                end_row = next_month_cell.row - 1
-                break
+            for day in range(1, days_in_month + 1):
+                target_col = day1_col + day - 1
+                venues = extract_venues(ws, target_col, block_col, merged_map, start_row, end_row)
 
-        print(f"  -> Extracting: {year}年{month}月 (days: {days_in_month}, rows: {start_row}-{end_row})")
-
-        for day in range(1, days_in_month + 1):
-            target_col = day1_col + day - 1
-            venues = extract_venues(ws, target_col, block_col, merged_map, start_row, end_row)
-
-            for venue in venues:
-                records.append({
-                    "date": date(year, month, day),
-                    "venue": venue
-                })
-                
-    print(f"[LOG] parse_excel completed. Total records extracted: {len(records)}")
+                for venue in venues:
+                    records.append({
+                        "date": date(year, month, day),
+                        "venue": venue
+                    })
+                    
     return records
