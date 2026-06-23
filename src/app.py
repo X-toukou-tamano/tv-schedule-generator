@@ -20,8 +20,7 @@ from database import (
 
 from keirin_json import get_race_data
 from event_sorter import split_and_sort_events
-
-# 新設したダウンロード制御用ファイルをインポート
+from ppt_generator import parse_event_text, create_powerpoint
 from download_handler import handle_pptx_download
 
 app = Flask(__name__)
@@ -35,7 +34,7 @@ LOGIN_PASSWORD = "tamano0401"
 
 def get_today_sorted_data():
     """
-    本日分のデータをDBと公式JSONから取得し、仕分け・ソートしたテキストリストを返す共通関数
+    本日分の放映テキストリストを取得し、HTMLプレビュー用にパーツ分解した辞書配列も一緒に作成する
     """
     rows = get_events()
     today_str = datetime.date.today().isoformat()
@@ -78,7 +77,20 @@ def get_today_sorted_data():
                 "status": status_text
             })
 
-    return split_and_sort_events(today_merged_data), today_str
+    day_text_list, night_text_list = split_and_sort_events(today_merged_data)
+    
+    # 【追加】HTMLプレビューが絶対にバグらないよう、サーバー側でパーツをあらかじめ分解する
+    preview_night = []
+    for txt in night_text_list:
+        n, g, s = parse_event_text(txt)
+        preview_night.append({"name": n, "grade": g, "status": s})
+        
+    preview_day = []
+    for txt in day_text_list:
+        n, g, s = parse_event_text(txt)
+        preview_day.append({"name": n, "grade": g, "status": s})
+
+    return (day_text_list, night_text_list, preview_day, preview_night), today_str
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -87,21 +99,12 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        if (
-            username == LOGIN_ID and
-            password == LOGIN_PASSWORD
-        ):
+        if (username == LOGIN_ID and password == LOGIN_PASSWORD):
             session["logged_in"] = True
             return redirect("/dashboard")
 
-        return render_template(
-            "login.html",
-            message="ログイン失敗"
-        )
-
-    return render_template(
-        "login.html"
-    )
+        return render_template("login.html", message="ログイン失敗")
+    return render_template("login.html")
 
 
 @app.route("/dashboard", methods=["GET", "POST"])
@@ -129,15 +132,13 @@ def dashboard():
     total_count = db_summary[2] if db_summary else 0
     last_update = get_update_time()
 
-    (day_text_list, night_text_list), today_str = get_today_sorted_data()
+    (day_text_list, night_text_list, preview_day, preview_night), today_str = get_today_sorted_data()
 
-    # ダッシュボード表示のタイミングで、内部的に最新データに基づいたPowerPointを事前生成しておく
-    # これにより、ダウンロードボタン押下時のレスポンスを高め、データ破損リスクを事前に検知できます
+    # ダッシュボード表示のタイミングで、裏で最新のPowerPointを生成しておく
     try:
-        from ppt_generator import create_powerpoint
         create_powerpoint(day_text_list, night_text_list)
     except Exception as e:
-        print(f"[WARNING] ダッシュボード表示時の事前PPT生成に失敗しました: {e}")
+        print(f"[WARNING] 事前PPT生成失敗: {e}")
 
     return render_template(
         "dashboard.html",
@@ -147,8 +148,8 @@ def dashboard():
         end_date=end_date,
         total_count=total_count,
         last_update=last_update,
-        day_text_list=day_text_list,
-        night_text_list=night_text_list
+        day_items=preview_day,       # HTML側での分解を不要にする
+        night_items=preview_night    # HTML側での分解を不要にする
     )
 
 
@@ -156,21 +157,13 @@ def dashboard():
 def events():
     if not session.get("logged_in"):
         return redirect("/")
-
     rows = get_events()
-    return render_template(
-        "events.html",
-        rows=rows
-    )
+    return render_template("events.html", rows=rows)
 
 
-# 【ルーティング】修正されたdownload_handlerへセッションとソートデータを引き渡して処理を委託
 @app.route("/download")
 def download_powerpoint():
-    # 本日のソート済み放映テキストを取得
-    (day_text_list, night_text_list), today_str = get_today_sorted_data()
-    
-    # 処理自体は完全に外部ファイルへ委託し、その結果（ファイル返却）をブラウザへ流す
+    (day_text_list, night_text_list, _, _), _ = get_today_sorted_data()
     return handle_pptx_download(session, day_text_list, night_text_list)
 
 
@@ -181,8 +174,4 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=5000,
-        debug=True
-    )
+    app.run(host="0.0.0.0", port=5000, debug=True)
