@@ -21,37 +21,50 @@ def create_tables():
     conn.close()
 
 def save_records(records):
+    print(f"\n--- [DB LOG] save_records 開始 ---")
+    print(f"[DB LOG] 受け取ったデータ件数: {len(records)}件")
+    
     if not records:
+        print("[DB LOG] 保存するデータがありません。終了します。")
         return
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    # ① 更新対応：アップロードされたデータに含まれる日付の既存レコードを削除
-    # （対象日のみ一旦リセットすることで、開催中止などによる「データの消失」も正確に反映する）
-    unique_dates = list(set([str(record["date"]) for record in records]))
-    
-    # SQLiteでIN句を使うためのプレースホルダー(?, ?, ...)を動的に生成
-    placeholders = ",".join(["?"] * len(unique_dates))
-    
-    cursor.execute(
-        f"DELETE FROM calendar_events WHERE event_date IN ({placeholders})", 
-        unique_dates
-    )
+    try:
+        unique_dates = list(set([str(record["date"]) for record in records]))
+        placeholders = ",".join(["?"] * len(unique_dates))
+        
+        print(f"[DB LOG] 既存データの削除開始 (対象日付: {len(unique_dates)}日分)...")
+        cursor.execute(
+            f"DELETE FROM calendar_events WHERE event_date IN ({placeholders})", 
+            unique_dates
+        )
+        print(f"[DB LOG] 削除完了: {cursor.rowcount}件の古いデータを消去しました")
 
-    # ② 高速化：executemany で一括インサート
-    data_to_insert = [(str(record["date"]), record["venue"]) for record in records]
-    
-    cursor.executemany(
-        """
-        INSERT INTO calendar_events (event_date, venue_name)
-        VALUES (?, ?)
-        """,
-        data_to_insert
-    )
+        data_to_insert = [(str(record["date"]), record["venue"]) for record in records]
+        
+        print(f"[DB LOG] 新規データのINSERT開始...")
+        # 重複エラー(UNIQUE制約)で落ちないように INSERT OR IGNORE に変更
+        cursor.executemany(
+            """
+            INSERT OR IGNORE INTO calendar_events (event_date, venue_name)
+            VALUES (?, ?)
+            """,
+            data_to_insert
+        )
+        print(f"[DB LOG] INSERT完了: {cursor.rowcount}件のデータを追加しました")
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+        print("[DB LOG] コミット成功！DBに確実に書き込みました。")
+
+    except Exception as e:
+        print(f"[DB LOG] ❌ エラー発生: {e}")
+        conn.rollback()
+
+    finally:
+        conn.close()
+        print("--- [DB LOG] save_records 終了 ---\n")
 
 def get_events():
     conn = get_connection()
