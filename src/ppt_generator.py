@@ -69,12 +69,13 @@ def calculate_y_positions(count, is_night):
 
 def create_powerpoint(day_text_list, night_text_list):
     """
-    ルート直下の「元データ(2).pptx」を読み込み、
+    srcフォルダ内の「元データ.pptx」を読み込み、
     パーツ分解したデータをカチッとした座標へ流し込んで新パワポを生成するメイン関数。
     """
-    template_path = os.path.join(os.getcwd(), "元データ(2).pptx")
+    # 【修正】読み込みパスを「src/元データ.pptx」に変更
+    template_path = os.path.join(os.getcwd(), "src", "元データ.pptx")
     if not os.path.exists(template_path):
-        raise FileNotFoundError("テンプレートファイル「元データ(2).pptx」がルート直下に見つかりません。")
+        raise FileNotFoundError("テンプレートファイル「src/元データ.pptx」が見つかりません。")
         
     prs = Presentation(template_path)
     slide = prs.slides[0] # 最初のスライドを使用
@@ -168,7 +169,7 @@ def create_powerpoint(day_text_list, night_text_list):
             tx_box_grade = slide.shapes.add_textbox(DAY_X_GRADE, y_pos, DAY_WIDTH, BOX_HEIGHT)
             tf_grade = tx_box_grade.text_frame
             tf_grade.word_wrap = False
-            p_grade = tf_grade.paragraphs[0]
+            p_grade = tx_box_grade.paragraphs[0]
             p_grade.text = grade
             p_grade.font.name = "MS Gothic"
             p_grade.font.size = Pt(32)
@@ -198,17 +199,14 @@ def create_powerpoint(day_text_list, night_text_list):
         import comtypes.client
         
         abs_pptx = os.path.abspath(output_path)
-        # Flaskが認識できるように「static」フォルダ直下に書き出し
         static_dir = os.path.join(os.getcwd(), "static")
         os.makedirs(static_dir, exist_ok=True)
         abs_png = os.path.abspath(os.path.join(static_dir, "preview.png"))
         
-        # COMコンポーネントを叩いて裏でPowerPointを起動
         powerpoint = comtypes.client.CreateObject("Powerpoint.Application")
         powerpoint.Visible = 1
         deck = powerpoint.Presentations.Open(abs_pptx, WithWindow=False)
         
-        # スライド1枚目をPNGとしてエクスポート
         deck.Slides[1].Export(abs_png, "PNG")
         deck.Close()
         powerpoint.Quit()
