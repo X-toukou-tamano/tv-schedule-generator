@@ -44,6 +44,9 @@
                 {{ start_date }} ～ <span style="background: yellow; padding: 2px 6px; border-radius: 3px;">{{ end_date }} まで登録済み</span>
                 <span style="font-size: 14px; color: #666; font-weight: normal; margin-left: 15px;">(合計 {{ total_count }} 件のスケジュール)</span>
             </div>
+            <div style="margin-top: 8px; font-size: 13px; color: #666;">
+                最終データ更新日時: <strong style="color: #333;">{{ last_update if last_update else '---' }}</strong>
+            </div>
         {% else %}
             <div class="info-date" style="color: #dc3545;">Excelデータが未登録です。以下のフォームからアップロードしてください。</div>
         {% endif %}
@@ -87,12 +90,4 @@
                     {% endfor %}
                     </ul>
                 {% else %}
-                    <p class="no-data">本日の対象開催はありません</p>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-</body>
-</html>
+                    <p class="no-data">本日の対象開催はありません</
