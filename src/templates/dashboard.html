@@ -2,98 +2,122 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>自動化システム - ダッシュボード</title>
+    <title>玉野競輪 TV室管理ダッシュボード</title>
     <style>
-        body { font-family: sans-serif; margin: 30px; background: #f8f9fa; color: #333; }
-        .container { max-width: 1000px; margin: auto; }
-        .header-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logout-btn { color: #dc3545; text-decoration: none; font-weight: bold; }
-        
-        /* インフォメーションスタイル */
-        .info-card { background: #fff; border-left: 6px solid #0d6efd; padding: 15px 20px; border-radius: 4px; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .info-card h3 { margin: 0 0 5px 0; font-size: 16px; color: #555; }
-        .info-date { font-size: 18px; font-weight: bold; color: #0d6efd; }
-        
-        .upload-section { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .alert-success { background: #d1e7dd; color: #0f5132; padding: 12px; border-radius: 4px; margin-bottom: 15px; font-weight: bold; }
-        
-        /* プレビュー表示エリア */
-        .flex-box { display: flex; gap: 25px; margin-top: 15px; }
-        .card { flex: 1; background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .blue-box { border-top: 8px solid #0056b3; }
-        .white-box { border-top: 8px solid #cccccc; }
-        .card h2 { margin-top: 0; font-size: 18px; }
-        ul { list-style: none; padding: 0; margin: 0; }
-        li { font-size: 16px; font-weight: bold; padding: 10px 0; border-bottom: 1px solid #eee; }
-        li:last-child { border-bottom: none; }
-        .no-data { color: #888; font-style: italic; font-size: 14px; }
+        body { font-family: sans-serif; margin: 30px; background: #f4f6f9; color: #333; }
+        .container { max-width: 1050px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { font-size: 24px; margin-top: 0; color: #111; border-bottom: 2px solid #0d6efd; padding-bottom: 10px; }
+        h2 { font-size: 18px; margin-top: 25px; color: #222; }
+        .alert-info { background-color: #cff4fc; border: 1px solid #b6effb; color: #055160; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .alert-success { background-color: #d1e7dd; border: 1px solid #badbcc; color: #0f5132; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .status-box { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 6px; margin-bottom: 25px; font-size: 14px; }
+        .upload-section { background: #fff; border: 2px dashed #cccccc; padding: 25px; border-radius: 6px; text-align: center; margin-bottom: 25px; }
+        .file-input { margin-bottom: 15px; font-size: 15px; }
+        .btn-primary { background: #0d6efd; color: white; border: none; padding: 10px 25px; font-size: 15px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-primary:hover { background: #0b5ed7; }
+        .nav-links { margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; display: flex; justify-content: space-between; }
+        .nav-links a { color: #0d6efd; text-decoration: none; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header-box">
-        <h1>競輪場内放映パワポ自動生成システム</h1>
-        <a href="/logout" class="logout-btn">ログアウト</a>
+    <h1>玉野競輪 TV室管理ダッシュボード</h1>
+
+    {% if message %}
+    <div class="alert-success">
+        <strong>💡 処理結果:</strong> {{ message }}
+    </div>
+    {% endif %}
+
+    <div class="alert-info" style="font-weight: bold; font-size: 16px;">
+        現在のカレンダーデータ登録状況（データベース蓄積期間）<br>
+        <span style="font-size: 20px; color: #0d6efd;">
+            {% if start_date and end_date %}
+                {{ start_date }} 〜 <span style="background: yellow; padding: 2px 5px; border-radius: 4px;">{{ end_date }} まで登録済み</span>
+            {% else %}
+                データ未登録（Excelをアップロードしてください）
+            {% endif %}
+        </span>
+        <span style="font-size: 14px; color: #555; font-weight: normal; margin-left: 10px;">(合計 {{ total_count }} 件のスケジュール)</span>
     </div>
 
-    <div class="info-card">
-        <h3>現在のカレンダーデータ登録状況（データベース蓄積期間）</h3>
-        {% if start_date and end_date %}
-            <div class="info-date">
-                {{ start_date }} ～ <span style="background: yellow; padding: 2px 6px; border-radius: 3px;">{{ end_date }} まで登録済み</span>
-                <span style="font-size: 14px; color: #666; font-weight: normal; margin-left: 15px;">(合計 {{ total_count }} 件のスケジュール)</span>
-            </div>
-            <div style="margin-top: 8px; font-size: 13px; color: #666;">
-                最終データ更新日時: <strong style="color: #333;">{{ last_update if last_update else '---' }}</strong>
-            </div>
-        {% else %}
-            <div class="info-date" style="color: #dc3545;">Excelデータが未登録です。以下のフォームからアップロードしてください。</div>
-        {% endif %}
+    <div class="status-box">
+        🗓️ <strong>システム運用情報:</strong><br>
+        • 最終データ更新日時: {% if last_update %}{{ last_update }}{% else %}--{% endif %}<br>
+        • 上期版（4月〜9月）、下期版（10月〜3月）、または3ヶ月版など、どのExcelでも同一ロジックでいつでも投入・マージ可能です。<br>
+        • 同じ日付のデータは、常に新しく取り込んだ内容が優先して上書き更新されます。
     </div>
 
+    <h2>開催カレンダーExcelの更新・登録</h2>
     <div class="upload-section">
-        <h2>開催カレンダーExcelの更新・登録</h2>
-        {% if message %}
-            <div class="alert-success">{{ message }}</div>
-        {% endif %}
         <form action="/dashboard" method="POST" enctype="multipart/form-data">
-            <input type="file" name="excel" accept=".xlsx, .xls" required style="font-size: 16px;">
-            <button type="submit" style="font-size: 16px; padding: 6px 15px; margin-left: 10px; cursor: pointer;">アップロード実行</button>
+            <input type="file" name="excel" class="file-input" accept=".xlsx, .xls" required><br>
+            <button type="submit" class="btn-primary">アップロード実行</button>
         </form>
     </div>
 
     <div style="margin-top: 40px;">
-        <h2 style="margin-bottom: 5px;">本日の放映文字列リアルタイム確認（PowerPoint同期データ）</h2>
-        <div style="font-size: 14px; color: #666; margin-bottom: 15px;">対象日: <strong>{{ today_str }}</strong> の公式JSONとの自動照合結果（モーニング・ミッドナイトは除外済み）</div>
-        
-        <div class="flex-box">
-            <div class="card blue-box">
-                <h2 style="color: #0056b3;">左枠（青枠：ナイター放映用）</h2>
-                {% if night_text_list %}
-                    <ul>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin: 0;">本日の放映予定 パワーポイント画面プレビュー</h2>
+            <a href="/download" style="background: #198754; color: white; text-decoration: none; font-weight: bold; padding: 12px 24px; border-radius: 6px; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;">
+                📥 PowerPoint(.pptx)を生成してダウンロード
+            </a>
+        </div>
+        <div style="font-size: 14px; color: #666; margin-bottom: 20px;">対象日: <strong>{{ today_str }}</strong> の出力イメージ（実際のパワポの配置・等間隔を再現しています）</div>
+
+        <div style="width: 100%; max-width: 1000px; aspect-ratio: 16 / 9; margin: 0 auto; background: #e9ecef; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); display: flex; padding: 4% 3% 2% 3%; box-sizing: border-box; gap: 4%;">
+            
+            <div style="flex: 1; background: #003366; border-radius: 12px; border: 4px solid #002244; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; color: white; position: relative;">
+                <div style="position: absolute; top: 15px; left: 20px; font-size: 14px; font-weight: bold; opacity: 0.6; letter-spacing: 1px;">NIGHTER</div>
+                
+                <div style="width: 100%; display: flex; flex-direction: column; justify-content: center; height: 80%; gap: {% if night_text_list|length == 2 %}15%{% elif night_text_list|length == 3 %}8%{% else %}4%{% endif %};">
                     {% for text in night_text_list %}
-                        <li>{{ text }}</li>
+                    <div style="display: flex; width: 100%; font-family: 'MS Gothic', 'monospace'; font-size: 24px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+                        <span style="width: 35%; text-align: left; padding-left: 5%;">{{ text.split()[0].replace('ナイター','') }}</span>
+                        <span style="width: 30%; text-align: center; color: #ffdd00;">
+                            {% if 'F1' in text or 'f1' in text %}FⅠ
+                            {% elif 'F2' in text or 'f2' in text %}FⅡ
+                            {% elif 'G3' in text or 'g3' in text %}GⅢ
+                            {% elif 'G1' in text or 'g1' in text %}GⅠ
+                            {% else %}{{ text.split()[1] if text.split()|length > 1 else '' }}{% endif %}
+                        </span>
+                        <span style="width: 35%; text-align: right; padding-right: 5%;">{{ text.split()[-1] if text.split()|length > 2 else '' }}</span>
+                    </div>
+                    {% else %}
+                    <div style="text-align: center; font-size: 18px; opacity: 0.5;">ナイター放映予定なし</div>
                     {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="no-data">本日の対象開催はありません</p>
-                {% endif %}
+                </div>
             </div>
 
-            <div class="card white-box">
-                <h2 style="color: #555;">右枠（白枠：デイ放映用）</h2>
-                {% if day_text_list %}
-                    <ul>
+            <div style="flex: 1; background: #ffffff; border-radius: 12px; border: 4px solid #dddddd; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; color: #333333; position: relative;">
+                <div style="position: absolute; top: 15px; left: 20px; font-size: 14px; font-weight: bold; opacity: 0.4; letter-spacing: 1px;">DAY</div>
+                
+                <div style="width: 100%; display: flex; flex-direction: column; justify-content: center; height: 80%; gap: {% if day_text_list|length == 2 %}15%{% elif day_text_list|length == 3 %}8%{% else %}4%{% endif %};">
                     {% for text in day_text_list %}
-                        <li>{{ text }}</li>
+                    <div style="display: flex; width: 100%; font-family: 'MS Gothic', 'monospace'; font-size: 24px; font-weight: bold;">
+                        <span style="width: 35%; text-align: left; padding-left: 5%;">{{ text.split()[0] }}</span>
+                        <span style="width: 30%; text-align: center; color: #0056b3;">
+                            {% if 'F1' in text or 'f1' in text %}FⅠ
+                            {% elif 'F2' in text or 'f2' in text %}FⅡ
+                            {% elif 'G3' in text or 'g3' in text %}GⅢ
+                            {% elif 'G1' in text or 'g1' in text %}GⅠ
+                            {% else %}{{ text.split()[1] if text.split()|length > 1 else '' }}{% endif %}
+                        </span>
+                        <span style="width: 35%; text-align: right; padding-right: 5%;">{{ text.split()[-1] if text.split()|length > 2 else '' }}</span>
+                    </div>
+                    {% else %}
+                    <div style="text-align: center; font-size: 18px; opacity: 0.4;">デイ放映予定なし</div>
                     {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="no-data">本日の対象開催はありません</p>
-                {% endif %}
+                </div>
             </div>
+
         </div>
+    </div>
+
+    <div class="nav-links">
+        <a href="/events">📅 登録カレンダー全日程一覧（確認用）</a>
+        <a href="/logout" style="color: #dc3545;">🚪 ログアウト</a>
     </div>
 </div>
 
