@@ -5,7 +5,7 @@ from pptx.util import Cm, Pt
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
 from pptx.enum.text import MSO_VERTICAL_ANCHOR
 from pptx.dml.color import RGBColor
-
+from datetime import date
 
 # ==================================================
 # 確定値
@@ -241,9 +241,11 @@ def create_powerpoint(
         exist_ok=True
     )
 
+    today_str = date.today().strftime("%m%d")
+
     output_path = os.path.join(
         upload_dir,
-        "場内放映予定.pptx"
+        f"場内放映予定{today_str}.pptx"
     )
 
     prs.save(output_path)
