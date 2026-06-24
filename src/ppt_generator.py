@@ -169,4 +169,3 @@ def parse_event_text(text):
     status = parts[2] if len(parts) > 2 else ""
 
     return name, grade, status
-```
