@@ -167,3 +167,17 @@ def create_powerpoint(day_text_list, night_text_list):
     )
 
     return output_path
+
+def parse_event_text(text):
+    if not text:
+        return "", "", ""
+
+    text = text.replace("ナイター", "").strip()
+
+    parts = text.split()
+
+    name = parts[0] if len(parts) > 0 else ""
+    grade = parts[1] if len(parts) > 1 else ""
+    status = parts[2] if len(parts) > 2 else ""
+
+    return name, grade, status
