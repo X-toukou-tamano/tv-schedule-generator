@@ -27,9 +27,6 @@ LOGIN_PASSWORD = "tamano0401"
 
 
 def auto_create_ppt():
-
-    print("★★★★ AUTO CREATE START ★★★★")
-
     (
         (
             day_events,
@@ -44,8 +41,6 @@ def auto_create_ppt():
         day_events,
         night_events
     )
-
-    print("★★★★ AUTO CREATE END ★★★★")
 
 def get_today_sorted_data():
     """
@@ -125,8 +120,9 @@ def get_today_sorted_data():
 scheduler = BackgroundScheduler()
 scheduler.add_job(
     auto_create_ppt,
-    trigger="interval",
-    minutes=1
+    trigger="cron",
+    hour=8,
+    minute=30
 )
 scheduler.start()
 
