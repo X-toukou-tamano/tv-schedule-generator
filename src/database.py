@@ -15,6 +15,8 @@ def get_connection():
 
     return conn
 
+import os
+
 def create_tables():
 
     print("★★★★ create_tables 開始 ★★★★")
@@ -39,6 +41,14 @@ def create_tables():
     """)
 
     conn.commit()
+
+    print(
+        "DB EXISTS =",
+        os.path.exists(
+            "/workspaces/tv-schedule-generator/tv_schedule.db"
+        )
+    )
+
     conn.close()
 
     print("★★★★ create_tables 終了 ★★★★")
