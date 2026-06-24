@@ -12,8 +12,8 @@ from datetime import date
 # ==================================================
 
 # X座標
-NIGHT_X = Cm(0.911)
-DAY_X = Cm(17.421)
+NIGHT_X = Cm(1.128)
+DAY_X = Cm(17.637)
 
 # サイズ
 BOX_WIDTH = Cm(15.239)
