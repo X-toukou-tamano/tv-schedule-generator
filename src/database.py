@@ -1,7 +1,18 @@
 import sqlite3
+import os
 
 def get_connection():
-    conn = sqlite3.connect("tv_schedule.db")
+
+    db_path = "tv_schedule.db"
+
+    print(
+        f"DB PATH = {os.path.abspath(db_path)}"
+    )
+
+    conn = sqlite3.connect(
+        db_path
+    )
+
     return conn
 
 def create_tables():
