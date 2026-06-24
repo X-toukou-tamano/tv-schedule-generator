@@ -1,28 +1,147 @@
 import os
 
 from pptx import Presentation
+from pptx.util import Cm, Pt
+from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
+from pptx.enum.text import MSO_VERTICAL_ANCHOR
 from pptx.dml.color import RGBColor
 
-# ----------------------------------
+
+# ==================================================
 # 確定値
-# ----------------------------------
+# ==================================================
 
-NIGHT_X = 430746
-DAY_X = 6339932
+# X座標
+NIGHT_X = Cm(0.911)
+DAY_X = Cm(17.421)
 
-BOX_WIDTH = 5485921
+# サイズ
+BOX_WIDTH = Cm(15.239)
 
-BOX_HEIGHT_SINGLE = 1859264
-BOX_HEIGHT_MULTI = 1216325
+BOX_HEIGHT_SINGLE = Cm(5.165)
+BOX_HEIGHT_MULTI = Cm(3.379)
 
+# Y座標
 Y_POSITIONS = {
-    1: [2734305],
-    2: [2126142, 3985406],
-    3: [1718949, 3122764, 4526579],
+    1: [Cm(7.595)],
+    2: [
+        Cm(5.906),
+        Cm(11.071)
+    ],
+    3: [
+        Cm(4.828),
+        Cm(8.680),
+        Cm(12.532)
+    ]
 }
 
+# 背景色
+NIGHT_FILL = RGBColor(51, 86, 147)      # #335693
+DAY_FILL = RGBColor(255, 255, 255)      # #FFFFFF
 
-def create_powerpoint(day_text_list, night_text_list):
+# 文字色
+NIGHT_FONT = RGBColor(255, 255, 255)    # #FFFFFF
+DAY_FONT = RGBColor(0, 0, 0)            # #000000
+
+
+# ==================================================
+# 表示文字作成
+# ==================================================
+
+def build_display_text(
+    venue,
+    grade,
+    status
+):
+    """
+    元PPTと同じ考え方で
+    1本の文字列を作る
+    """
+
+    venue = str(venue).strip()
+    grade = str(grade).strip()
+    status = str(status).strip()
+
+    return (
+        f"{venue}"
+        f"　     "
+        f"{grade}"
+        f"      　"
+        f"{status}"
+    )
+
+
+# ==================================================
+# 四角作成
+# ==================================================
+
+def add_schedule_box(
+    slide,
+    x,
+    y,
+    width,
+    height,
+    text,
+    fill_color,
+    font_color
+):
+
+    shape = slide.shapes.add_shape(
+        MSO_AUTO_SHAPE_TYPE.RECTANGLE,
+        x,
+        y,
+        width,
+        height
+    )
+
+    # --------------------------
+    # 塗りつぶし
+    # --------------------------
+
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = fill_color
+
+    # --------------------------
+    # 枠線なし
+    # --------------------------
+
+    shape.line.fill.background()
+
+    # --------------------------
+    # テキスト
+    # --------------------------
+
+    tf = shape.text_frame
+
+    tf.clear()
+
+    tf.vertical_anchor = (
+        MSO_VERTICAL_ANCHOR.MIDDLE
+    )
+
+    p = tf.paragraphs[0]
+
+    run = p.add_run()
+    run.text = text
+
+    font = run.font
+
+    font.name = "Rockwell"
+    font.size = Pt(28)
+    font.bold = True
+    font.color.rgb = font_color
+
+    return shape
+
+
+# ==================================================
+# メイン
+# ==================================================
+
+def create_powerpoint(
+    day_text_list,
+    night_text_list
+):
 
     template_path = os.path.join(
         os.getcwd(),
@@ -38,100 +157,106 @@ def create_powerpoint(day_text_list, night_text_list):
     prs = Presentation(template_path)
     slide = prs.slides[0]
 
-    #
-    # 仕様上 1～3場
-    #
-    if len(night_text_list) > 3:
-        raise Exception(
-            f"ナイターが3場を超えています: {len(night_text_list)}場"
-        )
+    # --------------------------
+    # 最大3場
+    # --------------------------
 
     if len(day_text_list) > 3:
         raise Exception(
-            f"デイが3場を超えています: {len(day_text_list)}場"
+            f"デイが3場を超えています: {len(day_text_list)}"
         )
 
-    #
+    if len(night_text_list) > 3:
+        raise Exception(
+            f"ナイターが3場を超えています: {len(night_text_list)}"
+        )
+
+    # ==================================================
     # ナイター
-    #
+    # ==================================================
+
     night_count = len(night_text_list)
 
     if night_count > 0:
 
-        box_height = (
+        height = (
             BOX_HEIGHT_SINGLE
             if night_count == 1
             else BOX_HEIGHT_MULTI
         )
 
-        for idx, text in enumerate(night_text_list):
+        for idx, item in enumerate(
+            night_text_list
+        ):
 
-            textbox = slide.shapes.add_textbox(
-                NIGHT_X,
-                Y_POSITIONS[night_count][idx],
-                BOX_WIDTH,
-                box_height
+            if isinstance(item, dict):
+
+                text = build_display_text(
+                    item.get("venue", ""),
+                    item.get("grade", ""),
+                    item.get("status", "")
+                )
+
+            else:
+
+                text = str(item)
+
+            add_schedule_box(
+                slide=slide,
+                x=NIGHT_X,
+                y=Y_POSITIONS[night_count][idx],
+                width=BOX_WIDTH,
+                height=height,
+                text=text,
+                fill_color=NIGHT_FILL,
+                font_color=NIGHT_FONT
             )
 
-            textbox.text = text
-
-            # 見本に合わせる
-            p = textbox.text_frame.paragraphs[0]
-            p.font.name = "Rockwell"
-            p.font.bold = True
-            p.font.size = prs.slides[0].shapes[0].text_frame.paragraphs[0].font.size
-
-            try:
-                p.font.color.rgb = RGBColor(
-                    255,
-                    255,
-                    255
-                )
-            except Exception:
-                pass
-
-    #
+    # ==================================================
     # デイ
-    #
+    # ==================================================
+
     day_count = len(day_text_list)
 
     if day_count > 0:
 
-        box_height = (
+        height = (
             BOX_HEIGHT_SINGLE
             if day_count == 1
             else BOX_HEIGHT_MULTI
         )
 
-        for idx, text in enumerate(day_text_list):
+        for idx, item in enumerate(
+            day_text_list
+        ):
 
-            textbox = slide.shapes.add_textbox(
-                DAY_X,
-                Y_POSITIONS[day_count][idx],
-                BOX_WIDTH,
-                box_height
+            if isinstance(item, dict):
+
+                text = build_display_text(
+                    item.get("venue", ""),
+                    item.get("grade", ""),
+                    item.get("status", "")
+                )
+
+            else:
+
+                text = str(item)
+
+            add_schedule_box(
+                slide=slide,
+                x=DAY_X,
+                y=Y_POSITIONS[day_count][idx],
+                width=BOX_WIDTH,
+                height=height,
+                text=text,
+                fill_color=DAY_FILL,
+                font_color=DAY_FONT
             )
 
-            textbox.text = text
-
-            p = textbox.text_frame.paragraphs[0]
-
-            p.font.name = "Rockwell"
-            p.font.bold = True
-            p.font.size = prs.slides[0].shapes[0].text_frame.paragraphs[0].font.size
-
-            try:
-                p.font.color.rgb = RGBColor(
-                    0,
-                    0,
-                    0
-                )
-            except Exception:
-                pass
-
-    #
+    # ==================================================
     # 保存
-    #
+    # ==================================================
+
     upload_dir = os.path.join(
         os.getcwd(),
         "uploads"
@@ -150,22 +275,7 @@ def create_powerpoint(day_text_list, night_text_list):
     prs.save(output_path)
 
     print(
-        f"[SUCCESS] パワポ保存完了: {output_path}"
+        f"[SUCCESS] {output_path}"
     )
 
     return output_path
-
-
-def parse_event_text(text):
-    if not text:
-        return "", "", ""
-
-    text = text.replace("ナイター", "").strip()
-
-    parts = text.split()
-
-    name = parts[0] if len(parts) > 0 else ""
-    grade = parts[1] if len(parts) > 1 else ""
-    status = parts[2] if len(parts) > 2 else ""
-
-    return name, grade, status
