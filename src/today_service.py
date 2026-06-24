@@ -9,7 +9,6 @@ def get_today_sorted_data():
 本日開催データ取得
 """
 
-```
 rows = get_events()
 
 today_str = datetime.date.today().isoformat()
@@ -128,5 +127,3 @@ return (
     ),
     today_str,
 )
-```
-
