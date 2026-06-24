@@ -4,4 +4,3 @@ openpyxl
 Flask
 gunicorn
 python-pptx
-apscheduler==3.11.2
