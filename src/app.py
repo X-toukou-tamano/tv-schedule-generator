@@ -25,22 +25,6 @@ LOGIN_ID = "tamano-keirin_TVroom"
 LOGIN_PASSWORD = "tamano0401"
 
 
-def auto_create_ppt():
-    (
-        (
-            day_events,
-            night_events,
-            _,
-            _,
-        ),
-        _,
-    ) = get_today_sorted_data()
-
-    create_powerpoint(
-        day_events,
-        night_events
-    )
-
 def get_today_sorted_data():
     """
     本日開催データ取得
