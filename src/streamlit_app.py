@@ -1,6 +1,7 @@
 import streamlit as st
 
 from database import (
+    create_tables,
     get_summary,
     get_update_time,
 )
@@ -12,6 +13,9 @@ st.set_page_config(
     page_title="TV放映予定管理",
     layout="wide"
 )
+
+# DB初期化
+create_tables()
 
 # ----------------------------
 # ログイン状態管理
