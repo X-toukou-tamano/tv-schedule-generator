@@ -5,6 +5,9 @@ def get_connection():
     return conn
 
 def create_tables():
+
+    print("★★★★ create_tables 開始 ★★★★")
+
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -17,7 +20,6 @@ def create_tables():
     )
     """)
 
-    # 【追加】最新アップデート日時を保存するためのメタテーブル
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS system_meta (
         meta_key TEXT PRIMARY KEY,
@@ -27,6 +29,8 @@ def create_tables():
 
     conn.commit()
     conn.close()
+
+    print("★★★★ create_tables 終了 ★★★★")
 
 def save_records(records):
     print(f"\n--- [DB LOG] save_records 開始 ---")
