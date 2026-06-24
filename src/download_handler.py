@@ -31,18 +31,10 @@ def handle_pptx_download(
             target_path
         ):
 
-            print(
-                f"[ERROR] ダウンロード対象のファイルが存在しません: {target_path}"
-            )
-
             return abort(
                 500,
                 "パワポファイルが生成されていません。ダッシュボードからやり直してください。"
             )
-
-        print(
-            f"[SUCCESS] パワポファイルをクライアントへ送信します: {target_path}"
-        )
 
         return send_file(
             target_path,
@@ -52,10 +44,6 @@ def handle_pptx_download(
         )
 
     except Exception as e:
-
-        print(
-            f"[CRITICAL] ダウンロード処理で致命的なエラーが発生しました: {e}"
-        )
 
         return abort(
             500,
