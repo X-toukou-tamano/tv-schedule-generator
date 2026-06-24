@@ -37,21 +37,21 @@ def get_today_sorted_data():
 
     try:
 
-    race_data = get_race_data()
+        race_data = get_race_data()
 
-    if race_data and "RaceList" in race_data:
+        if race_data and "RaceList" in race_data:
 
-        for info in race_data["RaceList"]:
+            for info in race_data["RaceList"]:
 
-            vname = info.get("keirinjoName")
+                vname = info.get("keirinjoName")
 
-            if vname:
-                vinfo_map[vname] = info
+                if vname:
+                    vinfo_map[vname] = info
 
-except Exception:
-    pass
+    except Exception:
+        pass
 
-today_merged_data = []
+    today_merged_data = []
 
     for row in rows:
 
@@ -145,7 +145,6 @@ today_merged_data = []
         ),
         today_str,
     )
-
 
 @app.route("/", methods=["GET", "POST"])
 def login():
