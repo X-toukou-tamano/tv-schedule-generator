@@ -27,7 +27,6 @@ LOGIN_PASSWORD = "tamano0401"
 
 
 def auto_create_ppt():
-
     (
         (
             day_events,
@@ -54,97 +53,59 @@ def get_today_sorted_data():
 
     try:
         race_data = get_race_data()
-
         if race_data and "RaceList" in race_data:
-
             for info in race_data["RaceList"]:
-
                 vname = info.get("keirinjoName")
-
                 if vname:
                     vinfo_map[vname] = info
-
     except Exception:
         pass
 
     today_merged_data = []
 
     for row in rows:
-
         event_date = row[0]
         venue_name = row[1]
 
-        if (
-            event_date == today_str
-            and venue_name in vinfo_map
-        ):
-
+        if event_date == today_str and venue_name in vinfo_map:
             info = vinfo_map[venue_name]
-
-            kubun_code = str(
-                info.get(
-                    "kubunIconName",
-                    ""
-                )
-            ).strip()
+            kubun_code = str(info.get("kubunIconName", "")).strip()
 
             session_type = None
-
             if kubun_code == "1":
                 session_type = "day"
-
             elif kubun_code == "3":
                 session_type = "night"
-
             else:
                 continue
 
-            status_text = info.get(
-                "nichijiIconName",
-                "-"
-            )
+            status_text = info.get("nichijiIconName", "-")
+            grade_text = info.get("gradeIconName", "-")
 
-            grade_text = info.get(
-                "gradeIconName",
-                "-"
-            )
+            today_merged_data.append({
+                "name": venue_name,
+                "session": session_type,
+                "grade": grade_text,
+                "status": status_text,
+            })
 
-            today_merged_data.append(
-                {
-                    "name": venue_name,
-                    "session": session_type,
-                    "grade": grade_text,
-                    "status": status_text,
-                }
-            )
-
-    day_events, night_events = split_and_sort_events(
-        today_merged_data
-    )
+    day_events, night_events = split_and_sort_events(today_merged_data)
 
     preview_night = []
-
     for ev in night_events:
-
-        preview_night.append(
-            {
-                "name": ev["name"],
-                "grade": ev["grade"],
-                "status": ev["status"],
-            }
-        )
+        preview_night.append({
+            "name": ev["name"],
+            "grade": ev["grade"],
+            "status": ev["status"],
+        })
 
     preview_day = []
-
     for ev in day_events:
-
-        preview_day.append(
-            {
-                "name": ev["name"],
-                "grade": ev["grade"],
-                "status": ev["status"],
-            }
-        )
+        preview_day.append({
+            "name": ev["name"],
+            "grade": ev["grade"],
+            "status": ev["status"],
+        })
 
     return (
         (
@@ -158,15 +119,15 @@ def get_today_sorted_data():
 
 
 scheduler = BackgroundScheduler()
-
 scheduler.add_job(
     auto_create_ppt,
     trigger="cron",
     hour=8,
     minute=30
 )
-
 scheduler.start()
+
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
