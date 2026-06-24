@@ -47,12 +47,6 @@ def get_today_sorted_data():
                 if vname:
                     vinfo_map[vname] = info
 
-    except Exception as e:
-
-        print(
-            f"[WARNING] 公式JSONの読み込みに失敗しました: {e}"
-        )
-
     today_merged_data = []
 
     for row in rows:
@@ -245,12 +239,6 @@ def dashboard():
         create_powerpoint(
             day_events,
             night_events
-        )
-
-    except Exception as e:
-
-        print(
-            f"[WARNING] 事前PPT生成失敗: {e}"
         )
 
     return render_template(
