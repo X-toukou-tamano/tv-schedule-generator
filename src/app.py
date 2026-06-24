@@ -15,7 +15,6 @@ from event_sorter import split_and_sort_events
 from excel_reader import parse_excel
 from keirin_json import get_race_data
 from ppt_generator import create_powerpoint
-from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 app.secret_key = "tamano-tvppt-secret-key"
@@ -115,17 +114,6 @@ def get_today_sorted_data():
         ),
         today_str,
     )
-
-
-scheduler = BackgroundScheduler()
-scheduler.add_job(
-    auto_create_ppt,
-    trigger="cron",
-    hour=8,
-    minute=30
-)
-scheduler.start()
-
 
 @app.route("/", methods=["GET", "POST"])
 def login():
