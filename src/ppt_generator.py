@@ -1,7 +1,7 @@
 import os
-from copy import deepcopy
 
 from pptx import Presentation
+from pptx.dml.color import RGBColor
 
 # ----------------------------------
 # 確定値
@@ -10,25 +10,16 @@ from pptx import Presentation
 NIGHT_X = 430746
 DAY_X = 6339932
 
+BOX_WIDTH = 5485921
+
+BOX_HEIGHT_SINGLE = 1859264
+BOX_HEIGHT_MULTI = 1216325
+
 Y_POSITIONS = {
     1: [2734305],
     2: [2126142, 3985406],
     3: [1718949, 3122764, 4526579],
 }
-
-
-def clone_shape(slide, shape):
-    new_el = deepcopy(shape.element)
-    slide.shapes._spTree.insert_element_before(
-        new_el,
-        "p:extLst"
-    )
-    return slide.shapes[-1]
-
-
-def remove_shape(shape):
-    sp = shape.element
-    sp.getparent().remove(sp)
 
 
 def create_powerpoint(day_text_list, night_text_list):
@@ -48,7 +39,7 @@ def create_powerpoint(day_text_list, night_text_list):
     slide = prs.slides[0]
 
     #
-    # 仕様上 1～3場のみ
+    # 仕様上 1～3場
     #
     if len(night_text_list) > 3:
         raise Exception(
@@ -60,87 +51,83 @@ def create_powerpoint(day_text_list, night_text_list):
             f"デイが3場を超えています: {len(day_text_list)}場"
         )
 
-    night_template = None
-    day_template = None
-
     #
-    # 元データ内の見本を探す
-    #
-    for shape in slide.shapes:
-
-        if not getattr(shape, "has_text_frame", False):
-            continue
-
-        text = shape.text.strip()
-
-        #
-        # ナイター見本
-        #
-        if "ナイター" in text:
-            night_template = shape
-
-        #
-        # デイ見本
-        #
-        elif text:
-            if day_template is None:
-                day_template = shape
-
-    if night_template is None:
-        raise Exception("ナイターテンプレートが見つかりません")
-
-    if day_template is None:
-        raise Exception("デイテンプレートが見つかりません")
-
-    #
-    # 元の見本を保持
-    #
-    night_source = night_template
-    day_source = day_template
-
-    #
-    # ナイター生成
+    # ナイター
     #
     night_count = len(night_text_list)
 
     if night_count > 0:
 
+        box_height = (
+            BOX_HEIGHT_SINGLE
+            if night_count == 1
+            else BOX_HEIGHT_MULTI
+        )
+
         for idx, text in enumerate(night_text_list):
 
-            shape = clone_shape(
-                slide,
-                night_source
+            textbox = slide.shapes.add_textbox(
+                NIGHT_X,
+                Y_POSITIONS[night_count][idx],
+                BOX_WIDTH,
+                box_height
             )
 
-            shape.left = NIGHT_X
-            shape.top = Y_POSITIONS[night_count][idx]
+            textbox.text = text
 
-            shape.text = text
+            # 見本に合わせる
+            p = textbox.text_frame.paragraphs[0]
+            p.font.name = "Rockwell"
+            p.font.bold = True
+            p.font.size = prs.slides[0].shapes[0].text_frame.paragraphs[0].font.size
+
+            try:
+                p.font.color.rgb = RGBColor(
+                    255,
+                    255,
+                    255
+                )
+            except Exception:
+                pass
 
     #
-    # デイ生成
+    # デイ
     #
     day_count = len(day_text_list)
 
     if day_count > 0:
 
+        box_height = (
+            BOX_HEIGHT_SINGLE
+            if day_count == 1
+            else BOX_HEIGHT_MULTI
+        )
+
         for idx, text in enumerate(day_text_list):
 
-            shape = clone_shape(
-                slide,
-                day_source
+            textbox = slide.shapes.add_textbox(
+                DAY_X,
+                Y_POSITIONS[day_count][idx],
+                BOX_WIDTH,
+                box_height
             )
 
-            shape.left = DAY_X
-            shape.top = Y_POSITIONS[day_count][idx]
+            textbox.text = text
 
-            shape.text = text
+            p = textbox.text_frame.paragraphs[0]
 
-    #
-    # 元見本を削除
-    #
-    remove_shape(night_source)
-    remove_shape(day_source)
+            p.font.name = "Rockwell"
+            p.font.bold = True
+            p.font.size = prs.slides[0].shapes[0].text_frame.paragraphs[0].font.size
+
+            try:
+                p.font.color.rgb = RGBColor(
+                    0,
+                    0,
+                    0
+                )
+            except Exception:
+                pass
 
     #
     # 保存
@@ -168,6 +155,7 @@ def create_powerpoint(day_text_list, night_text_list):
 
     return output_path
 
+
 def parse_event_text(text):
     if not text:
         return "", "", ""
@@ -181,3 +169,4 @@ def parse_event_text(text):
     status = parts[2] if len(parts) > 2 else ""
 
     return name, grade, status
+```
