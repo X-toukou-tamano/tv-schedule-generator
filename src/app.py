@@ -27,6 +27,9 @@ LOGIN_PASSWORD = "tamano0401"
 
 
 def auto_create_ppt():
+
+    print("★★★★ AUTO CREATE START ★★★★")
+
     (
         (
             day_events,
@@ -42,6 +45,7 @@ def auto_create_ppt():
         night_events
     )
 
+    print("★★★★ AUTO CREATE END ★★★★")
 
 def get_today_sorted_data():
     """
