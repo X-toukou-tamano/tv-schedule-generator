@@ -121,9 +121,8 @@ def get_today_sorted_data():
 scheduler = BackgroundScheduler()
 scheduler.add_job(
     auto_create_ppt,
-    trigger="cron",
-    hour=8,
-    minute=30
+    trigger="interval",
+    minutes=1
 )
 scheduler.start()
 
