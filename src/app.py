@@ -36,18 +36,22 @@ def get_today_sorted_data():
     vinfo_map = {}
 
     try:
-        race_data = get_race_data()
 
-        if race_data and "RaceList" in race_data:
+    race_data = get_race_data()
 
-            for info in race_data["RaceList"]:
+    if race_data and "RaceList" in race_data:
 
-                vname = info.get("keirinjoName")
+        for info in race_data["RaceList"]:
 
-                if vname:
-                    vinfo_map[vname] = info
+            vname = info.get("keirinjoName")
 
-    today_merged_data = []
+            if vname:
+                vinfo_map[vname] = info
+
+except Exception:
+    pass
+
+today_merged_data = []
 
     for row in rows:
 
@@ -236,12 +240,15 @@ def dashboard():
     #
     try:
 
-        create_powerpoint(
-            day_events,
-            night_events
-        )
+    create_powerpoint(
+        day_events,
+        night_events
+    )
 
-    return render_template(
+except Exception:
+    pass
+
+return render_template(
         "dashboard.html",
         message=message,
         today_str=today_str,
