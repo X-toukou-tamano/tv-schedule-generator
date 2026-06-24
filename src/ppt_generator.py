@@ -36,12 +36,12 @@ Y_POSITIONS = {
 }
 
 # 背景色
-NIGHT_FILL = RGBColor(51, 86, 147)      # #335693
-DAY_FILL = RGBColor(255, 255, 255)      # #FFFFFF
+NIGHT_FILL = RGBColor(51, 86, 147)
+DAY_FILL = RGBColor(255, 255, 255)
 
 # 文字色
-NIGHT_FONT = RGBColor(255, 255, 255)    # #FFFFFF
-DAY_FONT = RGBColor(0, 0, 0)            # #000000
+NIGHT_FONT = RGBColor(255, 255, 255)
+DAY_FONT = RGBColor(0, 0, 0)
 
 
 # ==================================================
@@ -49,21 +49,20 @@ DAY_FONT = RGBColor(0, 0, 0)            # #000000
 # ==================================================
 
 def build_display_text(
-    venue,
+    name,
     grade,
     status
 ):
     """
-    元PPTと同じ考え方で
-    1本の文字列を作る
+    場名 + グレード + 日数
     """
 
-    venue = str(venue).strip()
+    name = str(name).strip()
     grade = str(grade).strip()
     status = str(status).strip()
 
     return (
-        f"{venue}"
+        f"{name}"
         f"　     "
         f"{grade}"
         f"      　"
@@ -94,25 +93,15 @@ def add_schedule_box(
         height
     )
 
-    # --------------------------
-    # 塗りつぶし
-    # --------------------------
-
+    # 背景色
     shape.fill.solid()
     shape.fill.fore_color.rgb = fill_color
 
-    # --------------------------
     # 枠線なし
-    # --------------------------
-
     shape.line.fill.background()
 
-    # --------------------------
     # テキスト
-    # --------------------------
-
     tf = shape.text_frame
-
     tf.clear()
 
     tf.vertical_anchor = (
@@ -125,7 +114,6 @@ def add_schedule_box(
     run.text = text
 
     font = run.font
-
     font.name = "Rockwell"
     font.size = Pt(28)
     font.bold = True
@@ -139,8 +127,8 @@ def add_schedule_box(
 # ==================================================
 
 def create_powerpoint(
-    day_text_list,
-    night_text_list
+    day_events,
+    night_events
 ):
 
     template_path = os.path.join(
@@ -157,25 +145,23 @@ def create_powerpoint(
     prs = Presentation(template_path)
     slide = prs.slides[0]
 
-    # --------------------------
     # 最大3場
-    # --------------------------
 
-    if len(day_text_list) > 3:
+    if len(day_events) > 3:
         raise Exception(
-            f"デイが3場を超えています: {len(day_text_list)}"
+            f"デイが3場を超えています: {len(day_events)}"
         )
 
-    if len(night_text_list) > 3:
+    if len(night_events) > 3:
         raise Exception(
-            f"ナイターが3場を超えています: {len(night_text_list)}"
+            f"ナイターが3場を超えています: {len(night_events)}"
         )
 
     # ==================================================
     # ナイター
     # ==================================================
 
-    night_count = len(night_text_list)
+    night_count = len(night_events)
 
     if night_count > 0:
 
@@ -185,21 +171,15 @@ def create_powerpoint(
             else BOX_HEIGHT_MULTI
         )
 
-        for idx, item in enumerate(
-            night_text_list
+        for idx, event in enumerate(
+            night_events
         ):
 
-            if isinstance(item, dict):
-
-                text = build_display_text(
-                    item.get("venue", ""),
-                    item.get("grade", ""),
-                    item.get("status", "")
-                )
-
-            else:
-
-                text = str(item)
+            text = build_display_text(
+                event.get("name", ""),
+                event.get("grade", ""),
+                event.get("status", "")
+            )
 
             add_schedule_box(
                 slide=slide,
@@ -216,7 +196,7 @@ def create_powerpoint(
     # デイ
     # ==================================================
 
-    day_count = len(day_text_list)
+    day_count = len(day_events)
 
     if day_count > 0:
 
@@ -226,21 +206,15 @@ def create_powerpoint(
             else BOX_HEIGHT_MULTI
         )
 
-        for idx, item in enumerate(
-            day_text_list
+        for idx, event in enumerate(
+            day_events
         ):
 
-            if isinstance(item, dict):
-
-                text = build_display_text(
-                    item.get("venue", ""),
-                    item.get("grade", ""),
-                    item.get("status", "")
-                )
-
-            else:
-
-                text = str(item)
+            text = build_display_text(
+                event.get("name", ""),
+                event.get("grade", ""),
+                event.get("status", "")
+            )
 
             add_schedule_box(
                 slide=slide,
