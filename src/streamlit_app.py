@@ -96,3 +96,21 @@ st.subheader("最終更新日時")
 st.info(
     last_update if last_update else "未更新"
 )
+
+# ----------------------------
+# 仮表示エリア
+# ----------------------------
+
+st.divider()
+
+st.subheader("本日開催")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("### デイ")
+    st.info("次工程で実装")
+
+with col2:
+    st.markdown("### ナイター")
+    st.info("次工程で実装")
