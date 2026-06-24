@@ -4,7 +4,14 @@ from database import (
     create_tables,
     get_summary,
     get_update_time,
+    save_records,
+    save_update_time,
 )
+
+from excel_reader import parse_excel
+
+import tempfile
+import os
 
 USERNAME = "tamano-keirin_TVroom"
 PASSWORD = "tamano0401"
@@ -96,6 +103,57 @@ st.subheader("最終更新日時")
 st.info(
     last_update if last_update else "未更新"
 )
+
+st.divider()
+
+st.subheader("Excelアップロード")
+
+uploaded_file = st.file_uploader(
+    "開催カレンダーExcel",
+    type=["xlsx", "xlsm"]
+)
+
+if uploaded_file is not None:
+
+    if st.button("DB更新"):
+
+        with tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=".xlsx"
+        ) as tmp:
+
+            tmp.write(
+                uploaded_file.getbuffer()
+            )
+
+            temp_path = tmp.name
+
+        try:
+
+            records = parse_excel(
+                temp_path
+            )
+
+            save_records(
+                records
+            )
+
+            save_update_time()
+
+            st.success(
+                f"{len(records)}件登録しました"
+            )
+
+            st.rerun()
+
+        finally:
+
+            if os.path.exists(
+                temp_path
+            ):
+                os.remove(
+                    temp_path
+                )
 
 # ----------------------------
 # 仮表示エリア
