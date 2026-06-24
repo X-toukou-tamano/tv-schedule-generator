@@ -1,4 +1,4 @@
-from app import get_today_sorted_data
+from today_service import get_today_sorted_data
 from ppt_generator import create_powerpoint
 
 
