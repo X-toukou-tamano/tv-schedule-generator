@@ -213,3 +213,32 @@ with col2:
     else:
 
         st.info("開催なし")
+
+st.divider()
+
+st.subheader("PowerPoint")
+
+if st.button("PPT生成"):
+
+    from ppt_generator import create_powerpoint
+
+    output_path = create_powerpoint(
+        day_events,
+        night_events
+    )
+
+    st.success(
+        "PowerPoint生成完了"
+    )
+
+    with open(
+        output_path,
+        "rb"
+    ) as f:
+
+        st.download_button(
+            label="PPTダウンロード",
+            data=f,
+            file_name=output_path.split("/")[-1],
+            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
