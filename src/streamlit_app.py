@@ -9,6 +9,7 @@ from database import (
 )
 
 from excel_reader import parse_excel
+from today_service import get_today_sorted_data
 
 import tempfile
 import os
@@ -163,12 +164,52 @@ st.divider()
 
 st.subheader("本日開催")
 
+(
+    (
+        day_events,
+        night_events,
+        preview_day,
+        preview_night,
+    ),
+    today_str,
+) = get_today_sorted_data()
+
+st.caption(f"対象日: {today_str}")
+
 col1, col2 = st.columns(2)
 
 with col1:
+
     st.markdown("### デイ")
-    st.info("次工程で実装")
+
+    if preview_day:
+
+        for item in preview_day:
+
+            st.write(
+                f"{item['name']} "
+                f"{item['grade']} "
+                f"{item['status']}"
+            )
+
+    else:
+
+        st.info("開催なし")
 
 with col2:
+
     st.markdown("### ナイター")
-    st.info("次工程で実装")
+
+    if preview_night:
+
+        for item in preview_night:
+
+            st.write(
+                f"{item['name']} "
+                f"{item['grade']} "
+                f"{item['status']}"
+            )
+
+    else:
+
+        st.info("開催なし")
