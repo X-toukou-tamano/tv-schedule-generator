@@ -199,12 +199,18 @@ def parse_excel(excel_path):
 
 def get_upload_info(excel_path):
 
+    import streamlit as st
+
     filename = os.path.basename(excel_path)
-    raise ValueError(filename)
+
+    st.write("excel_path =", excel_path)
+    st.write("filename =", filename)
+
+    st.stop()
+
     # ----------------------------
     # 上期・下期判定
     # ----------------------------
-
     wb = load_workbook(
         excel_path,
         data_only=True
