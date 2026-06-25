@@ -1,5 +1,7 @@
 import os
-from datetime import date
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from flask import abort, send_file
 
 
@@ -17,8 +19,11 @@ def handle_pptx_download(
 
     try:
 
-        today_str = date.today().strftime(
-            "%m%d"
+        today_str = (
+            datetime.now(
+                ZoneInfo("Asia/Tokyo")
+            )
+            .strftime("%m%d")
         )
 
         target_path = os.path.join(
