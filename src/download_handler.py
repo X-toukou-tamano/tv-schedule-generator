@@ -23,7 +23,9 @@ def handle_pptx_download(
             datetime.now(
                 ZoneInfo("Asia/Tokyo")
             )
-            .strftime("%m%d")
+            .strftime(
+                "%m%d"
+            )
         )
 
         target_path = os.path.join(
