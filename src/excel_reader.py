@@ -201,50 +201,6 @@ def get_upload_info(excel_path):
     filename = os.path.basename(excel_path)
 
     # ----------------------------
-    # 年度判定
-    # ----------------------------
-
-    match_r = re.search(
-        r"R([0-9０-９]+)",
-        filename,
-        re.IGNORECASE
-    )
-
-    if match_r:
-
-        year = (
-            "R"
-            + str(
-                int(
-                    match_r.group(1).translate(
-                        str.maketrans(
-                            "０１２３４５６７８９",
-                            "0123456789"
-                        )
-                    )
-                )
-            )
-        )
-
-    else:
-
-        match_year = re.search(
-            r"(20\d{2})",
-            filename
-        )
-
-        if not match_year:
-            raise ValueError(
-                "年度を判定できません。"
-            )
-
-        fiscal_year = int(
-            match_year.group(1)
-        )
-
-        year = f"R{fiscal_year - 2018}"
-
-    # ----------------------------
     # 上期・下期判定
     # ----------------------------
 
@@ -287,6 +243,56 @@ def get_upload_info(excel_path):
         raise ValueError(
             "上期・下期を判定できません。"
         )
+
+    # ----------------------------
+    # 年度判定
+    # ----------------------------
+
+    match_r = re.search(
+        r"R([0-9０-９]+)",
+        filename,
+        re.IGNORECASE
+    )
+
+    if match_r:
+
+        year = (
+            "R"
+            + str(
+                int(
+                    match_r.group(1).translate(
+                        str.maketrans(
+                            "０１２３４５６７８９",
+                            "0123456789"
+                        )
+                    )
+                )
+            )
+        )
+
+    else:
+
+        match_year = re.search(
+            r"(20\d{2})",
+            filename
+        )
+
+        if not match_year:
+            raise ValueError(
+                "年度を判定できません。"
+            )
+
+        fiscal_year = int(
+            match_year.group(1)
+        )
+
+        # 西暦は年度で判定
+        if term == "上期":
+            reiwa = fiscal_year - 2018
+        else:
+            reiwa = fiscal_year - 2019
+
+        year = f"R{reiwa}"
 
     return (
         year,
