@@ -47,7 +47,6 @@ if summary[2] == 0:
         ZoneInfo("Asia/Tokyo")
     ).date()
 
-    # 年度判定
     if today.month >= 4:
         reiwa = today.year - 2018
     else:
@@ -55,7 +54,6 @@ if summary[2] == 0:
 
     year = f"R{reiwa}"
 
-    # 上期・下期判定
     if 4 <= today.month <= 9:
         term = "上期"
     else:
