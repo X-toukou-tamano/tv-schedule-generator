@@ -1,5 +1,5 @@
 import sqlite3
-
+from zoneinfo import ZoneInfo
 
 def get_connection():
     conn = sqlite3.connect("tv_schedule.db")
@@ -147,8 +147,13 @@ def save_update_time():
 
     import datetime
 
-    now_str = datetime.datetime.now().strftime(
-        "%Y/%m/%d %H:%M:%S"
+    now_str = (
+        datetime.datetime.now(
+            ZoneInfo("Asia/Tokyo")
+        )
+        .strftime(
+            "%Y/%m/%d %H:%M:%S"
+        )
     )
 
     conn = get_connection()
