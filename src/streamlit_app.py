@@ -8,7 +8,10 @@ from database import (
     save_update_time,
 )
 
-from excel_reader import parse_excel
+from excel_reader import (
+    parse_excel,
+    get_upload_info,
+)
 from today_service import get_today_sorted_data
 
 import tempfile
@@ -24,6 +27,12 @@ st.set_page_config(
 
 # DB初期化
 create_tables()
+UPLOAD_DIR = "uploads"
+
+os.makedirs(
+    UPLOAD_DIR,
+    exist_ok=True
+)
 
 # ----------------------------
 # ログイン状態管理
@@ -115,47 +124,34 @@ uploaded_file = st.file_uploader(
 )
 
 if uploaded_file is not None:
-
     if st.button("DB更新"):
-
-        with tempfile.NamedTemporaryFile(
-            delete=False,
-            suffix=".xlsx"
-        ) as tmp:
-
-            tmp.write(
-                uploaded_file.getbuffer()
-            )
-
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+            tmp.write(uploaded_file.getbuffer())
             temp_path = tmp.name
 
         try:
+            year, term = get_upload_info(temp_path)
 
-            records = parse_excel(
-                temp_path
-            )
+            # 古い年度のExcelを削除
+            for file_name in os.listdir(UPLOAD_DIR):
+                if file_name.endswith(".xlsx") and not file_name.startswith(year):
+                    os.remove(os.path.join(UPLOAD_DIR, file_name))
 
-            save_records(
-                records
-            )
+            save_path = os.path.join(UPLOAD_DIR, f"{year}_{term}.xlsx")
 
+            with open(save_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+            records = parse_excel(save_path)
+            save_records(records)
             save_update_time()
 
-            st.success(
-                f"{len(records)}件登録しました"
-            )
-
+            st.success(f"{len(records)}件登録しました")
             st.rerun()
 
         finally:
-
-            if os.path.exists(
-                temp_path
-            ):
-                os.remove(
-                    temp_path
-                )
-
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 # ----------------------------
 # 仮表示エリア
 # ----------------------------
