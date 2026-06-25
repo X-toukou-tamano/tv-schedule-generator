@@ -1,4 +1,5 @@
 import sqlite3
+import datetime
 from zoneinfo import ZoneInfo
 
 def get_connection():
@@ -144,8 +145,6 @@ def get_summary():
 
 
 def save_update_time():
-
-    import datetime
 
     now_str = (
         datetime.datetime.now(
