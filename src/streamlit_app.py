@@ -161,13 +161,26 @@ if uploaded_file is not None:
 
     if st.button("DB更新"):
 
-        year, term = get_upload_info(
-            uploaded_file.name
-        )
-
         os.makedirs(
             UPLOAD_DIR,
             exist_ok=True
+        )
+
+        temp_path = os.path.join(
+            UPLOAD_DIR,
+            "__temp__.xlsx"
+        )
+
+        with open(
+            temp_path,
+            "wb"
+        ) as f:
+            f.write(
+                uploaded_file.getbuffer()
+            )
+
+        year, term = get_upload_info(
+            temp_path
         )
 
         save_path = os.path.join(
@@ -175,13 +188,13 @@ if uploaded_file is not None:
             f"{year}_{term}.xlsx"
         )
 
-        with open(
-            save_path,
-            "wb"
-        ) as f:
-            f.write(
-                uploaded_file.getbuffer()
-            )
+        if os.path.exists(save_path):
+            os.remove(save_path)
+
+        os.replace(
+            temp_path,
+            save_path
+        )
 
         for file_name in os.listdir(
             UPLOAD_DIR
