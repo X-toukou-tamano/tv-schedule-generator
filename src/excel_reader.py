@@ -195,3 +195,100 @@ def parse_excel(excel_path):
                     })
                     
     return records
+
+def get_upload_info(excel_path):
+
+    filename = os.path.basename(excel_path)
+
+    # ----------------------------
+    # 年度判定
+    # ----------------------------
+
+    match_r = re.search(
+        r"R([0-9０-９]+)",
+        filename,
+        re.IGNORECASE
+    )
+
+    if match_r:
+
+        year = (
+            "R"
+            + str(
+                int(
+                    match_r.group(1).translate(
+                        str.maketrans(
+                            "０１２３４５６７８９",
+                            "0123456789"
+                        )
+                    )
+                )
+            )
+        )
+
+    else:
+
+        match_year = re.search(
+            r"(20\d{2})",
+            filename
+        )
+
+        if not match_year:
+            raise ValueError(
+                "年度を判定できません。"
+            )
+
+        fiscal_year = int(
+            match_year.group(1)
+        )
+
+        year = f"R{fiscal_year - 2018}"
+
+    # ----------------------------
+    # 上期・下期判定
+    # ----------------------------
+
+    wb = load_workbook(
+        excel_path,
+        read_only=True,
+        data_only=True
+    )
+
+    term = None
+
+    for ws in wb.worksheets:
+
+        if ws.sheet_state != "visible":
+            continue
+
+        merged_map = build_merged_map(ws)
+        month_map = find_months(
+            ws,
+            merged_map
+        )
+
+        if not month_map:
+            continue
+
+        first_month = min(
+            month_map.keys()
+        )
+
+        if 4 <= first_month <= 9:
+            term = "上期"
+        else:
+            term = "下期"
+
+        break
+
+    wb.close()
+
+    if term is None:
+        raise ValueError(
+            "上期・下期を判定できません。"
+        )
+
+    return (
+        year,
+        term
+    )
