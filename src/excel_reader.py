@@ -153,64 +153,105 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
 
 def parse_excel(excel_path):
     filename = os.path.basename(excel_path)
-    raise ValueError(filename)
-    wb = load_workbook(excel_path, data_only=True)
+
+    wb = load_workbook(
+        excel_path,
+        data_only=True
+    )
+
     records = []
-    
+
     for ws in wb.worksheets:
-        # 隠しシートは絶対に読み込まない（前回のバグの確実な防止）
-        if ws.sheet_state != 'visible':
+
+        if ws.sheet_state != "visible":
             continue
-            
+
         merged_map = build_merged_map(ws)
         month_map = find_months(ws, merged_map)
-        
+
         if not month_map:
             continue
-            
+
         block_col = find_block_column(ws, merged_map)
-        sorted_months = sorted(month_map.items(), key=lambda item: (item[1].row, item[1].column))
+
+        sorted_months = sorted(
+            month_map.items(),
+            key=lambda item: (
+                item[1].row,
+                item[1].column
+            )
+        )
 
         for i, (month, month_cell) in enumerate(sorted_months):
-            year = resolve_year(filename, month)
-            day1_col = get_day1_column(ws, month_cell)
-            days_in_month = monthrange(year, month)[1]
+
+            year = resolve_year(
+                filename,
+                month
+            )
+
+            day1_col = get_day1_column(
+                ws,
+                month_cell
+            )
+
+            days_in_month = monthrange(
+                year,
+                month
+            )[1]
 
             start_row = month_cell.row
-            
+
             end_row = ws.max_row
-            for j in range(i + 1, len(sorted_months)):
+
+            for j in range(
+                i + 1,
+                len(sorted_months)
+            ):
+
                 next_month_cell = sorted_months[j][1]
+
                 if next_month_cell.row > start_row:
                     end_row = next_month_cell.row - 1
                     break
 
-            for day in range(1, days_in_month + 1):
-                target_col = day1_col + day - 1
-                venues = extract_venues(ws, target_col, block_col, merged_map, start_row, end_row)
+            for day in range(
+                1,
+                days_in_month + 1
+            ):
+
+                target_col = (
+                    day1_col + day - 1
+                )
+
+                venues = extract_venues(
+                    ws,
+                    target_col,
+                    block_col,
+                    merged_map,
+                    start_row,
+                    end_row
+                )
 
                 for venue in venues:
-                    records.append({
-                        "date": date(year, month, day),
-                        "venue": venue
-                    })
-                    
+
+                    records.append(
+                        {
+                            "date": date(
+                                year,
+                                month,
+                                day
+                            ),
+                            "venue": venue,
+                        }
+                    )
+
+    wb.close()
+
     return records
-
 def get_upload_info(excel_path):
-
-    import streamlit as st
 
     filename = os.path.basename(excel_path)
 
-    st.write("excel_path =", excel_path)
-    st.write("filename =", filename)
-
-    st.stop()
-
-    # ----------------------------
-    # 上期・下期判定
-    # ----------------------------
     wb = load_workbook(
         excel_path,
         data_only=True
@@ -219,13 +260,12 @@ def get_upload_info(excel_path):
     term = None
 
     for ws in wb.worksheets:
-        print(type(ws))
-        print(ws.__class__)
-        print(hasattr(ws, "merged_cells"))
+
         if ws.sheet_state != "visible":
             continue
 
         merged_map = build_merged_map(ws)
+
         month_map = find_months(
             ws,
             merged_map
@@ -252,12 +292,8 @@ def get_upload_info(excel_path):
             "上期・下期を判定できません。"
         )
 
-    # ----------------------------
-    # 年度判定
-    # ----------------------------
-
     match_r = re.search(
-        r"R([0-9０-９]+)",
+        r"R\s*([0-9０-９]+)",
         filename,
         re.IGNORECASE
     )
@@ -294,7 +330,6 @@ def get_upload_info(excel_path):
             match_year.group(1)
         )
 
-        # 西暦は年度で判定
         if term == "上期":
             reiwa = fiscal_year - 2018
         else:
@@ -302,7 +337,4 @@ def get_upload_info(excel_path):
 
         year = f"R{reiwa}"
 
-    return (
-        year,
-        term
-    )
+    return year, term
