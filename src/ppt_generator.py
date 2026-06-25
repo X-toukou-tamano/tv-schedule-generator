@@ -5,8 +5,9 @@ from pptx.util import Cm, Pt
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
 from pptx.enum.text import MSO_VERTICAL_ANCHOR
 from pptx.dml.color import RGBColor
-from datetime import date
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
 # ==================================================
 # 確定値
 # ==================================================
@@ -231,7 +232,7 @@ def create_powerpoint(
     # 保存
     # ==================================================
 
-    upload_dir = os.path.join(
+        upload_dir = os.path.join(
         os.getcwd(),
         "uploads"
     )
@@ -241,7 +242,14 @@ def create_powerpoint(
         exist_ok=True
     )
 
-    today_str = date.today().strftime("%m%d")
+    today_str = (
+        datetime.now(
+            ZoneInfo("Asia/Tokyo")
+        )
+        .strftime(
+            "%m%d"
+        )
+    )
 
     output_path = os.path.join(
         upload_dir,
