@@ -153,7 +153,7 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
 
 def parse_excel(excel_path):
     filename = os.path.basename(excel_path)
-    print(filename)
+    raise ValueError(filename)
     wb = load_workbook(excel_path, data_only=True)
     records = []
     
@@ -200,7 +200,7 @@ def parse_excel(excel_path):
 def get_upload_info(excel_path):
 
     filename = os.path.basename(excel_path)
-
+    raise ValueError(filename)
     # ----------------------------
     # 上期・下期判定
     # ----------------------------
