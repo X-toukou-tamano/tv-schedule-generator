@@ -64,17 +64,11 @@ if summary[2] == 0:
         f"{year}_{term}.xlsx"
     )
 
-    if os.path.exists(
-        target_path
-    ):
+    if os.path.exists(target_path):
 
-        records = parse_excel(
-            target_path
-        )
+        records = parse_excel(target_path)
 
-        save_records(
-            records
-        )
+        save_records(records)
 # ----------------------------
 # ログイン状態管理
 # ----------------------------
