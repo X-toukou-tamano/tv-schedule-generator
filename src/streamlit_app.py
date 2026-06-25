@@ -159,6 +159,8 @@ st.divider()
 
 st.subheader("Excelアップロード")
 
+st.subheader("Excelアップロード")
+
 uploaded_file = st.file_uploader(
     "開催カレンダーExcel",
     type=["xlsx", "xlsm"]
@@ -169,12 +171,12 @@ if uploaded_file is not None:
 
         year, term = get_upload_info(uploaded_file.name)
 
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+
         save_path = os.path.join(
             UPLOAD_DIR,
             f"{year}_{term}.xlsx"
         )
-
-        os.makedirs(UPLOAD_DIR, exist_ok=True)
 
         with open(save_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
@@ -193,10 +195,6 @@ if uploaded_file is not None:
 
         st.success(f"{len(records)}件登録しました")
         st.rerun()
-
-        finally:
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
 # ----------------------------
 # 仮表示エリア
 # ----------------------------
