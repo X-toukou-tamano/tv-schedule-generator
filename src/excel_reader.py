@@ -206,14 +206,15 @@ def get_upload_info(excel_path):
 
     wb = load_workbook(
         excel_path,
-        read_only=True,
         data_only=True
     )
 
     term = None
 
     for ws in wb.worksheets:
-
+        print(type(ws))
+        print(ws.__class__)
+        print(hasattr(ws, "merged_cells"))
         if ws.sheet_state != "visible":
             continue
 
