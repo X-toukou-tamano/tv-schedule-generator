@@ -232,7 +232,7 @@ def create_powerpoint(
     # 保存
     # ==================================================
 
-        upload_dir = os.path.join(
+    upload_dir = os.path.join(
         os.getcwd(),
         "uploads"
     )
