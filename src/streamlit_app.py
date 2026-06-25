@@ -174,21 +174,22 @@ if uploaded_file is not None:
         )
 
         temp_path = os.path.join(
-    UPLOAD_DIR,
-    uploaded_file.name
-)
+            UPLOAD_DIR,
+            uploaded_file.name
+        )
 
-with open(
-    temp_path,
-    "wb"
-) as f:
-    f.write(
-        uploaded_file.getbuffer()
-    )
+        with open(
+            temp_path,
+            "wb"
+        ) as f:
+            f.write(
+                uploaded_file.getbuffer()
+            )
 
-year, term = get_upload_info(
-    temp_path
-)
+        year, term = get_upload_info(
+            temp_path
+        )
+
         save_path = os.path.join(
             UPLOAD_DIR,
             f"{year}_{term}.xlsx"
