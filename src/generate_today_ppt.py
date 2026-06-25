@@ -12,6 +12,7 @@ from excel_reader import parse_excel
 from today_service import get_today_sorted_data
 from ppt_generator import create_powerpoint
 
+
 def main():
 
     create_tables()
@@ -69,3 +70,7 @@ def main():
     )
 
     print("PPT生成完了")
+
+
+if __name__ == "__main__":
+    main()
