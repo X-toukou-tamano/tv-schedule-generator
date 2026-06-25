@@ -14,7 +14,6 @@ from excel_reader import (
 )
 from today_service import get_today_sorted_data
 
-import tempfile
 import os
 
 USERNAME = "tamano-keirin_TVroom"
@@ -69,6 +68,7 @@ if summary[2] == 0:
         records = parse_excel(target_path)
 
         save_records(records)
+
 # ----------------------------
 # ログイン状態管理
 # ----------------------------
@@ -105,7 +105,6 @@ if not st.session_state.logged_in:
             )
 
     st.stop()
-
 # ----------------------------
 # ダッシュボード
 # ----------------------------
@@ -153,41 +152,67 @@ st.divider()
 
 st.subheader("Excelアップロード")
 
-st.subheader("Excelアップロード")
-
 uploaded_file = st.file_uploader(
     "開催カレンダーExcel",
     type=["xlsx", "xlsm"]
 )
 
 if uploaded_file is not None:
+
     if st.button("DB更新"):
 
-        year, term = get_upload_info(uploaded_file.name)
+        year, term = get_upload_info(
+            uploaded_file.name
+        )
 
-        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        os.makedirs(
+            UPLOAD_DIR,
+            exist_ok=True
+        )
 
         save_path = os.path.join(
             UPLOAD_DIR,
             f"{year}_{term}.xlsx"
         )
 
-        with open(save_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+        with open(
+            save_path,
+            "wb"
+        ) as f:
+            f.write(
+                uploaded_file.getbuffer()
+            )
 
-        for file_name in os.listdir(UPLOAD_DIR):
+        for file_name in os.listdir(
+            UPLOAD_DIR
+        ):
+
             if (
                 file_name.endswith(".xlsx")
                 and not file_name.startswith(year)
                 and file_name != os.path.basename(save_path)
             ):
-                os.remove(os.path.join(UPLOAD_DIR, file_name))
+                os.remove(
+                    os.path.join(
+                        UPLOAD_DIR,
+                        file_name
+                    )
+                )
 
-        records = parse_excel(save_path)
-        save_records(records)
+        records = parse_excel(
+            save_path
+        )
+
+        save_records(
+            records
+        )
+
         save_update_time()
 
-        st.success(f"{len(records)}件登録しました")
+        st.success(
+            f"{len(records)}件登録しました"
+        )
+
         st.rerun()
 # ----------------------------
 # 仮表示エリア
@@ -207,7 +232,9 @@ st.subheader("本日開催")
     today_str,
 ) = get_today_sorted_data()
 
-st.caption(f"対象日: {today_str}")
+st.caption(
+    f"対象日: {today_str}"
+)
 
 col1, col2 = st.columns(2)
 
@@ -272,6 +299,6 @@ if st.button("PPT生成"):
         st.download_button(
             label="PPTダウンロード",
             data=f,
-            file_name=output_path.split("/")[-1],
+            file_name=os.path.basename(output_path),
             mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
         )
