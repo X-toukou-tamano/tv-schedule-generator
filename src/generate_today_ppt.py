@@ -25,26 +25,33 @@ def main():
             ZoneInfo("Asia/Tokyo")
         ).date()
 
-        if today.month >= 4:
-            reiwa = today.year - 2018
-        else:
-            reiwa = today.year - 2019
-
-        year = f"R{reiwa}"
-
         if 4 <= today.month <= 9:
             term = "上期"
         else:
             term = "下期"
 
-        target_path = os.path.join(
-            "uploads",
-            f"{year}_{term}.xlsx"
-        )
+        target_path = None
 
-        if os.path.exists(
-            target_path
-        ):
+        if os.path.isdir("uploads"):
+
+            for file_name in sorted(
+                os.listdir("uploads"),
+                reverse=True
+            ):
+
+                if (
+                    file_name.endswith(".xlsx")
+                    and term in file_name
+                ):
+
+                    target_path = os.path.join(
+                        "uploads",
+                        file_name
+                    )
+
+                    break
+
+        if target_path:
 
             records = parse_excel(
                 target_path
