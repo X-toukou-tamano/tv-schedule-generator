@@ -1,4 +1,5 @@
 import datetime
+from zoneinfo import ZoneInfo
 
 from database import get_events
 from event_sorter import split_and_sort_events
@@ -12,7 +13,13 @@ def get_today_sorted_data():
 
     rows = get_events()
 
-    today_str = datetime.date.today().isoformat()
+    today_str = (
+        datetime.datetime.now(
+            ZoneInfo("Asia/Tokyo")
+        )
+        .date()
+        .isoformat()
+    )
 
     vinfo_map = {}
 
