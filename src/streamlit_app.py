@@ -27,6 +27,7 @@ st.set_page_config(
 
 # DB初期化
 create_tables()
+
 UPLOAD_DIR = "uploads"
 
 os.makedirs(
@@ -34,6 +35,50 @@ os.makedirs(
     exist_ok=True
 )
 
+# DBが空なら保存済みExcelから復元
+summary = get_summary()
+
+if summary[2] == 0:
+
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    today = datetime.now(
+        ZoneInfo("Asia/Tokyo")
+    ).date()
+
+    # 年度判定
+    if today.month >= 4:
+        reiwa = today.year - 2018
+    else:
+        reiwa = today.year - 2019
+
+    year = f"R{reiwa}"
+
+    # 上期・下期判定
+    if 4 <= today.month <= 9:
+        term = "上期"
+    else:
+        term = "下期"
+
+    target_path = os.path.join(
+        UPLOAD_DIR,
+        f"{year}_{term}.xlsx"
+    )
+
+    if os.path.exists(
+        target_path
+    ):
+
+        records = parse_excel(
+            target_path
+        )
+
+        save_records(
+            records
+        )
+
+        save_update_time()
 # ----------------------------
 # ログイン状態管理
 # ----------------------------
