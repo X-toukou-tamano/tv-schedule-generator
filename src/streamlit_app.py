@@ -41,33 +41,40 @@ if summary[2] == 0:
 
     from datetime import datetime
     from zoneinfo import ZoneInfo
+    import re
 
     today = datetime.now(
         ZoneInfo("Asia/Tokyo")
     ).date()
-
-    if today.month >= 4:
-        reiwa = today.year - 2018
-    else:
-        reiwa = today.year - 2019
-
-    year = f"R{reiwa}"
 
     if 4 <= today.month <= 9:
         term = "上期"
     else:
         term = "下期"
 
-    target_path = os.path.join(
-        UPLOAD_DIR,
-        f"{year}_{term}.xlsx"
-    )
+    target_path = None
 
-    if os.path.exists(target_path):
+    for file_name in sorted(os.listdir(UPLOAD_DIR), reverse=True):
 
-        records = parse_excel(target_path)
+        if (
+            file_name.endswith(".xlsx")
+            and term in file_name
+        ):
+            target_path = os.path.join(
+                UPLOAD_DIR,
+                file_name
+            )
+            break
 
-        save_records(records)
+    if target_path:
+
+        records = parse_excel(
+            target_path
+        )
+
+        save_records(
+            records
+        )
 
 # ----------------------------
 # ログイン状態管理
