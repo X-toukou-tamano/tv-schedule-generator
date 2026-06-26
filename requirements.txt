@@ -3,3 +3,4 @@ beautifulsoup4
 openpyxl
 python-pptx
 streamlit
+PyGithub
