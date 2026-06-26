@@ -12,7 +12,14 @@ from excel_reader import (
     parse_excel,
     get_upload_info,
 )
+
 from today_service import get_today_sorted_data
+
+from github_storage import (
+    upload_excel,
+    download_excel,
+    list_excels,
+)
 
 import os
 
@@ -27,21 +34,13 @@ st.set_page_config(
 # DB初期化
 create_tables()
 
-UPLOAD_DIR = "uploads"
+from datetime import datetime
+from zoneinfo import ZoneInfo
+import tempfile
 
-os.makedirs(
-    UPLOAD_DIR,
-    exist_ok=True
-)
-
-# DBが空なら保存済みExcelから復元
 summary = get_summary()
 
 if summary[2] == 0:
-
-    from datetime import datetime
-    from zoneinfo import ZoneInfo
-    import re
 
     today = datetime.now(
         ZoneInfo("Asia/Tokyo")
@@ -49,32 +48,33 @@ if summary[2] == 0:
 
     if 4 <= today.month <= 9:
         term = "上期"
+        reiwa = today.year - 2018
     else:
         term = "下期"
+        reiwa = today.year - 2019
 
-    target_path = None
+    filename = f"R{reiwa}_{term}.xlsx"
 
-    for file_name in sorted(os.listdir(UPLOAD_DIR), reverse=True):
+    try:
 
-        if (
-            file_name.endswith(".xlsx")
-            and term in file_name
-        ):
-            target_path = os.path.join(
-                UPLOAD_DIR,
-                file_name
-            )
-            break
+        excel = download_excel(filename)
 
-    if target_path:
+        with tempfile.NamedTemporaryFile(
+            suffix=".xlsx",
+            delete=False
+        ) as tmp:
+
+            tmp.write(excel.read())
+            temp_path = tmp.name
 
         records = parse_excel(
-            target_path
+            temp_path
         )
 
-        save_records(
-            records
-        )
+        save_records(records)
+
+    except Exception:
+        pass
 
 # ----------------------------
 # ログイン状態管理
@@ -190,37 +190,15 @@ if uploaded_file is not None:
             temp_path
         )
 
-        save_path = os.path.join(
-            UPLOAD_DIR,
-            f"{year}_{term}.xlsx"
+        filename = f"{year}_{term}.xlsx"
+
+        upload_excel(
+            uploaded_file.getvalue(),
+            filename
         )
-
-        if os.path.exists(save_path):
-            os.remove(save_path)
-
-        os.replace(
-            temp_path,
-            save_path
-        )
-
-        for file_name in os.listdir(
-            UPLOAD_DIR
-        ):
-
-            if (
-                file_name.endswith(".xlsx")
-                and not file_name.startswith(year)
-                and file_name != os.path.basename(save_path)
-            ):
-                os.remove(
-                    os.path.join(
-                        UPLOAD_DIR,
-                        file_name
-                    )
-                )
 
         records = parse_excel(
-            save_path
+            temp_path
         )
 
         save_records(
