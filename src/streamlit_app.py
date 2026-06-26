@@ -34,13 +34,6 @@ st.set_page_config(
 # DB初期化
 create_tables()
 
-UPLOAD_DIR = "uploads"
-
-os.makedirs(
-    UPLOAD_DIR,
-    exist_ok=True
-)
-
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import tempfile
