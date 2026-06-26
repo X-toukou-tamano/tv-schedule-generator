@@ -46,32 +46,47 @@ def list_excels():
 # Excelアップロード
 # ----------------------------
 
-def upload_excel(file_bytes, filename):
+def upload_excel(
+    file_bytes,
+    filename
+):
 
     repo = get_repo()
 
     path = f"{FOLDER}/{filename}"
 
-    try:
-        old = repo.get_contents(path)
-        print(f"UPDATE: {path}")
+    print(f"===== upload_excel =====")
+    print(f"path = {path}")
 
-        repo.update_file(
+    try:
+
+        old = repo.get_contents(path)
+
+        print("UPDATE MODE")
+        print(f"sha = {old.sha}")
+
+        result = repo.update_file(
             path=path,
             message=f"Update {filename}",
             content=file_bytes,
             sha=old.sha
         )
 
+        print(result)
+
     except Exception as e:
-        print(f"CREATE: {path}")
+
+        print("CREATE MODE")
+        print(type(e))
         print(e)
 
-        repo.create_file(
+        result = repo.create_file(
             path=path,
             message=f"Create {filename}",
             content=file_bytes
         )
+
+        print(result)
 
 # ----------------------------
 # Excelダウンロード
