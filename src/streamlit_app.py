@@ -175,16 +175,21 @@ if uploaded_file is not None:
 
     if st.button("DB更新"):
 
-        with tempfile.NamedTemporaryFile(
-            suffix=".xlsx",
-            delete=False
-        ) as tmp:
+        temp_dir = tempfile.gettempdir()
 
-            tmp.write(
+        temp_path = os.path.join(
+            temp_dir,
+            uploaded_file.name
+        )
+
+        with open(
+            temp_path,
+            "wb"
+        ) as f:
+
+            f.write(
                 uploaded_file.getbuffer()
             )
-
-            temp_path = tmp.name
 
         year, term = get_upload_info(
             temp_path
