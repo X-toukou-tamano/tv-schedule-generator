@@ -53,29 +53,57 @@ if summary[2] == 0:
         term = "下期"
         reiwa = today.year - 2019
 
-    filename = f"R{reiwa}_{term}.xlsx"
+    target = f"R{reiwa}_{term}"
 
-    try:
+    files = list_excels()
 
-        excel = download_excel(filename)
+    filename = next(
+        (
+            f
+            for f in files
+            if f.startswith(target)
+        ),
+        None
+    )
 
-        with tempfile.NamedTemporaryFile(
-            suffix=".xlsx",
-            delete=False
-        ) as tmp:
+    if filename is not None:
 
-            tmp.write(excel.read())
-            temp_path = tmp.name
+        try:
 
-        records = parse_excel(
-            temp_path
+            excel = download_excel(
+                filename
+            )
+
+            with tempfile.NamedTemporaryFile(
+                suffix=".xlsx",
+                delete=False
+            ) as tmp:
+
+                tmp.write(
+                    excel.read()
+                )
+
+                temp_path = tmp.name
+
+            records = parse_excel(
+                temp_path
+            )
+
+            save_records(
+                records
+            )
+
+        except Exception as e:
+
+            st.error(
+                f"Excel読込エラー: {e}"
+            )
+
+    else:
+
+        st.warning(
+            f"{target} のExcelが見つかりません。"
         )
-
-        save_records(records)
-
-    except Exception:
-        pass
-
 # ----------------------------
 # ログイン状態管理
 # ----------------------------
