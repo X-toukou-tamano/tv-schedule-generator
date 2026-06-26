@@ -46,36 +46,32 @@ def list_excels():
 # Excelアップロード
 # ----------------------------
 
-def upload_excel(
-    file_bytes,
-    filename
-):
+def upload_excel(file_bytes, filename):
 
     repo = get_repo()
 
     path = f"{FOLDER}/{filename}"
 
-    message = f"Update {filename}"
-
     try:
-
         old = repo.get_contents(path)
+        print(f"UPDATE: {path}")
 
         repo.update_file(
             path=path,
-            message=message,
+            message=f"Update {filename}",
             content=file_bytes,
             sha=old.sha
         )
 
-    except UnknownObjectException:
+    except Exception as e:
+        print(f"CREATE: {path}")
+        print(e)
 
         repo.create_file(
             path=path,
             message=f"Create {filename}",
             content=file_bytes
         )
-
 
 # ----------------------------
 # Excelダウンロード
