@@ -55,39 +55,24 @@ def upload_excel(
 
     path = f"{FOLDER}/{filename}"
 
-    print(f"===== upload_excel =====")
-    print(f"path = {path}")
-
     try:
 
         old = repo.get_contents(path)
 
-        print("UPDATE MODE")
-        print(f"sha = {old.sha}")
-
-        result = repo.update_file(
+        repo.update_file(
             path=path,
             message=f"Update {filename}",
             content=file_bytes,
             sha=old.sha
         )
 
-        print(result)
+    except UnknownObjectException:
 
-    except Exception as e:
-
-        print("CREATE MODE")
-        print(type(e))
-        print(e)
-
-        result = repo.create_file(
+        repo.create_file(
             path=path,
             message=f"Create {filename}",
             content=file_bytes
         )
-
-        print(result)
-
 # ----------------------------
 # Excelダウンロード
 # ----------------------------
