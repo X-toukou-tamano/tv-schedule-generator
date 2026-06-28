@@ -6,8 +6,6 @@ from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
 from pptx.enum.text import MSO_VERTICAL_ANCHOR
 from pptx.dml.color import RGBColor
 
-from datetime import datetime
-from zoneinfo import ZoneInfo
 # ==================================================
 # 確定値
 # ==================================================
@@ -129,7 +127,8 @@ def add_schedule_box(
 
 def create_powerpoint(
     day_events,
-    night_events
+    night_events,
+    event_date,
 ):
 
     template_path = os.path.join(
@@ -242,19 +241,12 @@ def create_powerpoint(
         exist_ok=True
     )
 
-    today_str = (
-        datetime.now(
-            ZoneInfo("Asia/Tokyo")
-        )
-        .strftime(
-            "%m%d"
-        )
-    )
+    date_str = event_date.replace("-", "")
 
-    output_path = os.path.join(
-        upload_dir,
-        f"場内放映予定{today_str}.pptx"
-    )
+output_path = os.path.join(
+    upload_dir,
+    f"場内放映予定{date_str}.pptx"
+)
 
     prs.save(output_path)
 
