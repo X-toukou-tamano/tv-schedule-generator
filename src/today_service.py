@@ -1,59 +1,70 @@
-import datetime
-from zoneinfo import ZoneInfo
-
-from database import get_events
 from event_sorter import split_and_sort_events
-from keirin_json import get_race_data
+from excel_reader import parse_excel
+from keirin_schedule import get_schedule
 
 
 def get_today_sorted_data():
     """
-    本日開催データ取得
+    スケジュールデータ構築（公開判定によるbreak付き）
     """
 
-    rows = get_events()
+    excel_data = parse_excel()
 
-    today_str = (
-        datetime.datetime.now(
-            ZoneInfo("Asia/Tokyo")
-        )
-        .date()
-        .isoformat()
-    )
+    months = sorted({
+        (row["date"].year, row["date"].month)
+        for row in excel_data
+    })
+
+    race_data = get_schedule(months)
 
     vinfo_map = {}
 
-    try:
+    for info in race_data["RaceList"]:
 
-        race_data = get_race_data()
+        key = (
+            info["kaisaiDate"],
+            info["keirinjoName"]
+        )
 
-        if race_data and "RaceList" in race_data:
+        vinfo_map[key] = info
 
-            for info in race_data["RaceList"]:
+    # 1. まずExcelデータを日付ごとにまとめる
+    excel_by_date = {}
 
-                venue_name = info.get(
-                    "keirinjoName"
-                )
+    for row in excel_data:
 
-                if venue_name:
-                    vinfo_map[venue_name] = info
+        event_date = row["date"].isoformat()
 
-    except Exception:
-        pass
+        if event_date not in excel_by_date:
+            excel_by_date[event_date] = []
 
-    today_merged_data = []
+        excel_by_date[event_date].append(row)
 
-    for row in rows:
+    # 最終的な結果を格納する辞書
+    schedule_data_by_date = {}
 
-        event_date = row[0]
-        venue_name = row[1]
+    # 2. 日付ごとに1日ずつ処理
+    for event_date in sorted(excel_by_date.keys()):
 
-        if (
-            event_date == today_str
-            and venue_name in vinfo_map
-        ):
+        # その日の全場が揃っているかチェック
+        is_all_venues_available = True
+        current_day_merged_data = []
 
-            info = vinfo_map[venue_name]
+        for row in excel_by_date[event_date]:
+
+            venue_name = row["venue"]
+            key = (
+                event_date.replace("-", ""),
+                venue_name
+            )
+
+            # 1場でも欠けたらフラグを倒してループを抜ける
+            if key not in vinfo_map:
+                is_all_venues_available = False
+                break
+
+            # 存在する場合はデータを抽出
+            info = vinfo_map[key]
 
             kubun_code = str(
                 info.get(
@@ -83,7 +94,7 @@ def get_today_sorted_data():
                 "-"
             )
 
-            today_merged_data.append(
+            current_day_merged_data.append(
                 {
                     "name": venue_name,
                     "session": session_type,
@@ -92,40 +103,45 @@ def get_today_sorted_data():
                 }
             )
 
-    day_events, night_events = split_and_sort_events(
-        today_merged_data
-    )
+        # 1場でも欠けていたら、翌日以降の処理もすべて終了（break）
+        if not is_all_venues_available:
+            break
 
-    preview_day = []
-
-    for ev in day_events:
-
-        preview_day.append(
-            {
-                "name": ev["name"],
-                "grade": ev["grade"],
-                "status": ev["status"],
-            }
+        # 全部揃っていれば分類・ソートを行う
+        day_events, night_events = split_and_sort_events(
+            current_day_merged_data
         )
 
-    preview_night = []
+        preview_day = []
 
-    for ev in night_events:
+        for ev in day_events:
 
-        preview_night.append(
-            {
-                "name": ev["name"],
-                "grade": ev["grade"],
-                "status": ev["status"],
-            }
-        )
+            preview_day.append(
+                {
+                    "name": ev["name"],
+                    "grade": ev["grade"],
+                    "status": ev["status"],
+                }
+            )
 
-    return (
-        (
+        preview_night = []
+
+        for ev in night_events:
+
+            preview_night.append(
+                {
+                    "name": ev["name"],
+                    "grade": ev["grade"],
+                    "status": ev["status"],
+                }
+            )
+
+        # 結果を格納
+        schedule_data_by_date[event_date] = (
             day_events,
             night_events,
             preview_day,
             preview_night,
-        ),
-        today_str,
-    )
+        )
+
+    return schedule_data_by_date
