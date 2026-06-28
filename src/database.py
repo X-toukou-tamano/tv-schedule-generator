@@ -2,6 +2,7 @@ import sqlite3
 import datetime
 from zoneinfo import ZoneInfo
 
+
 def get_connection():
     conn = sqlite3.connect("tv_schedule.db")
     return conn
@@ -17,6 +18,9 @@ def create_tables():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         event_date TEXT NOT NULL,
         venue_name TEXT NOT NULL,
+        grade TEXT,
+        kubun TEXT,
+        nichiji TEXT,
         UNIQUE(event_date, venue_name)
     )
     """)
@@ -27,6 +31,17 @@ def create_tables():
         meta_value TEXT
     )
     """)
+
+    conn.commit()
+
+    # 既存DB対応
+    for column in ("grade", "kubun", "nichiji"):
+        try:
+            cursor.execute(
+                f"ALTER TABLE calendar_events ADD COLUMN {column} TEXT"
+            )
+        except sqlite3.OperationalError:
+            pass
 
     conn.commit()
     conn.close()
@@ -44,16 +59,12 @@ def save_records(records):
 
         unique_dates = list(
             set(
-                [
-                    str(record["date"])
-                    for record in records
-                ]
+                str(record["date"])
+                for record in records
             )
         )
 
-        placeholders = ",".join(
-            ["?"] * len(unique_dates)
-        )
+        placeholders = ",".join(["?"] * len(unique_dates))
 
         cursor.execute(
             f"""
@@ -100,6 +111,64 @@ def save_records(records):
         conn.close()
 
 
+def update_event_info(records):
+    """
+    records = [
+        {
+            "date": "2026-04-01",
+            "venue": "京王閣",
+            "grade": "F1",
+            "kubun": "3",
+            "nichiji": "初日"
+        },
+        ...
+    ]
+    """
+
+    if not records:
+        return
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.executemany(
+            """
+            UPDATE calendar_events
+            SET
+                grade = ?,
+                kubun = ?,
+                nichiji = ?
+            WHERE
+                event_date = ?
+            AND
+                venue_name = ?
+            """,
+            [
+                (
+                    r["grade"],
+                    r["kubun"],
+                    r["nichiji"],
+                    str(r["date"]),
+                    r["venue"]
+                )
+                for r in records
+            ]
+        )
+
+        conn.commit()
+
+    except Exception:
+
+        conn.rollback()
+        raise
+
+    finally:
+
+        conn.close()
+
+
 def get_events():
 
     conn = get_connection()
@@ -109,7 +178,10 @@ def get_events():
         """
         SELECT
             event_date,
-            venue_name
+            venue_name,
+            grade,
+            kubun,
+            nichiji
         FROM calendar_events
         ORDER BY event_date
         """
@@ -150,9 +222,7 @@ def save_update_time():
         datetime.datetime.now(
             ZoneInfo("Asia/Tokyo")
         )
-        .strftime(
-            "%Y/%m/%d %H:%M:%S"
-        )
+        .strftime("%Y/%m/%d %H:%M:%S")
     )
 
     conn = get_connection()
