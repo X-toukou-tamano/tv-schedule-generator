@@ -256,6 +256,8 @@ st.stop()
 
 schedule_data_by_date = get_today_sorted_data()
 
+st.write(schedule_data_by_date)
+st.stop()
 if schedule_data_by_date:
 
     today_str = next(iter(schedule_data_by_date))
