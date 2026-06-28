@@ -20,7 +20,7 @@ from github_storage import (
     download_excel,
     list_excels,
 )
-
+from schedule_updater import update_schedule_info
 import os
 
 USERNAME = "tamano-keirin_TVroom"
@@ -85,13 +85,13 @@ if summary[2] == 0:
 
                 temp_path = tmp.name
 
-            records = parse_excel(
-                temp_path
-            )
+            records = parse_excel(temp_path)
 
-            save_records(
-                records
-            )
+            save_records(records)
+
+            update_schedule_info()
+
+            save_update_time()
 
         except Exception as e:
 
@@ -227,14 +227,15 @@ if uploaded_file is not None:
             temp_path
         )
 
-        save_records(
-            records
-        )
+        save_records(records)
+
+        count = update_schedule_info()
 
         save_update_time()
 
         st.success(
-            f"{len(records)}件登録しました"
+            f"{len(records)}件登録しました\n"
+            f"{count}件 開催情報を更新しました"
         )
 
         st.rerun()
