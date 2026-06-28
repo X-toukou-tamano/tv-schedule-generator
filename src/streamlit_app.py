@@ -246,15 +246,27 @@ st.divider()
 
 st.subheader("本日開催")
 
-(
+schedule_data_by_date = get_today_sorted_data()
+
+if schedule_data_by_date:
+
+    today_str = next(iter(schedule_data_by_date))
+
     (
         day_events,
         night_events,
         preview_day,
         preview_night,
-    ),
-    today_str,
-) = get_today_sorted_data()
+    ) = schedule_data_by_date[today_str]
+
+else:
+
+    today_str = "-"
+
+    day_events = []
+    night_events = []
+    preview_day = []
+    preview_night = []
 
 st.caption(
     f"対象日: {today_str}"
