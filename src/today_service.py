@@ -30,6 +30,8 @@ def get_today_sorted_data():
 
     race_data = get_schedule(months)
 
+    return race_data
+
     vinfo_map = {}
 
     for info in race_data["RaceList"]:
