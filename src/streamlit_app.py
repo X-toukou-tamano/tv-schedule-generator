@@ -19,6 +19,7 @@ from github_storage import (
     list_excels,
 )
 from schedule_updater import update_schedule_info
+from ppt_service import generate_range_ppt
 import os
 
 USERNAME = "tamano-keirin_TVroom"
@@ -253,19 +254,60 @@ col1, col2 = st.columns(2)
 with col1:
 
     selected_start = st.date_input(
-        "開始日"
+        "開始日",
+        value=datetime.fromisoformat(db_start_date).date()
+        if db_start_date else datetime.today().date(),
     )
 
 with col2:
 
     selected_end = st.date_input(
-        "終了日"
+        "終了日",
+        value=datetime.fromisoformat(db_end_date).date()
+        if db_end_date else datetime.today().date(),
     )
 
-st.button(
+if st.button(
     "指定期間を生成",
-    use_container_width=True
-)
+    use_container_width=True,
+):
+
+    # 開始日と終了日の前後関係をチェック
+    if selected_start > selected_end:
+
+        st.error("開始日が終了日より後になっています。")
+
+    else:
+
+        zip_path = generate_range_ppt(
+            selected_start,
+            selected_end,
+        )
+
+        if zip_path is None:
+
+            st.warning(
+                "指定期間に生成できるデータがありません。"
+            )
+
+        else:
+
+            st.success(
+                f"{selected_start} ～ {selected_end} を生成しました。"
+            )
+
+            with open(
+                zip_path,
+                "rb",
+            ) as f:
+
+                st.download_button(
+                    label="ZIPダウンロード",
+                    data=f,
+                    file_name=os.path.basename(zip_path),
+                    mime="application/zip",
+                    use_container_width=True,
+                )
 
 st.button(
     "公開済み全期間を生成",
