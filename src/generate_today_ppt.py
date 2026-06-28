@@ -8,7 +8,7 @@ from database import (
     save_records,
 )
 from excel_reader import parse_excel
-from today_service import get_today_sorted_data
+from today_service import get_schedule_data
 from ppt_generator import create_powerpoint
 
 
@@ -60,7 +60,14 @@ def main():
                 records
             )
 
-    schedule_data_by_date = get_today_sorted_data()
+    today = datetime.now(
+        ZoneInfo("Asia/Tokyo")
+    ).date()
+
+    schedule_data_by_date = get_schedule_data(
+        today,
+        today,
+    )
 
     for (
         event_date,
@@ -72,11 +79,11 @@ def main():
         ),
     ) in schedule_data_by_date.items():
 
-    create_powerpoint(
-        day_events,
-        night_events,
-        event_date,
-    )
+        create_powerpoint(
+            day_events,
+            night_events,
+            event_date,
+        )
 
     print("PPT生成完了")
 
