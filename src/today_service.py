@@ -6,10 +6,13 @@ from keirin_schedule import get_schedule
 
 
 def get_today_sorted_data():
+    """
+    スケジュールデータ構築（公開判定によるbreak付き）
+    """
 
     rows = get_events()
 
-    raise Exception(rows[:5])
+    excel_data = []
 
     for event_date, venue_name in rows:
 
