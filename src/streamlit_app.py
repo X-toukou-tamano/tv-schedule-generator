@@ -36,7 +36,12 @@ st.set_page_config(
 )
 
 # DB初期化
-create_tables()
+def create_tables():
+
+    print("create_tables() 実行")
+
+    conn = get_connection()
+    cursor = conn.cursor()
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
