@@ -84,7 +84,7 @@ def save_records(records):
 
         cursor.executemany(
             """
-            INSERT OR IGNORE INTO
+            INSERT OR REPLACE INTO
             calendar_events
             (
                 event_date,
