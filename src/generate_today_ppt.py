@@ -72,10 +72,11 @@ def main():
         ),
     ) in schedule_data_by_date.items():
 
-        create_powerpoint(
-            day_events,
-            night_events
-        )
+    create_powerpoint(
+        day_events,
+        night_events,
+        event_date,
+    )
 
     print("PPT生成完了")
 
