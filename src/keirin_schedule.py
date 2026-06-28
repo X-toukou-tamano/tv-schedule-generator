@@ -3,6 +3,7 @@
 import re
 import requests
 from bs4 import BeautifulSoup
+from datetime import date, timedelta
 
 BASE_URL = "https://keirin.jp/pc/raceschedule"
 
@@ -137,29 +138,40 @@ def parse_month(year, month):
 
 def get_schedule(months):
 
-    result = []
+    race_list = []
 
     for year, month in months:
 
         print(f"{year}/{month} 取得中...")
 
-        result.extend(
-            parse_month(year, month)
-        )
+        schedules = parse_month(year, month)
 
-    return result
+        for s in schedules:
 
+            start = date(
+                s["year"],
+                s["month"],
+                s["start_day"]
+            )
 
-if __name__ == "__main__":
+            for i in range(s["length"]):
 
-    months = [
+                race_date = start + timedelta(days=i)
 
-        (2026, 9),
+                race_list.append({
 
-    ]
+                    "kaisaiDate": race_date.strftime("%Y%m%d"),
 
-    data = get_schedule(months)
+                    "keirinjoName": s["place"],
 
-    for d in data:
+                    "gradeIconName": s["grade"],
 
-        print(d)
+                    "nichijiIconName": s["encp"],
+
+                    "kubunIconName": s["kubun"],
+
+                })
+
+    return {
+        "RaceList": race_list
+    }
