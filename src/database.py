@@ -52,42 +52,43 @@ def create_tables():
 def save_records(records):
 
     if not records:
-        return
+        return 0
 
     conn = get_connection()
     cursor = conn.cursor()
 
     try:
 
-        unique_dates = list(
-            set(
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS calendar_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_date TEXT NOT NULL,
+            venue_name TEXT NOT NULL,
+            grade TEXT,
+            kubun TEXT,
+            nichiji TEXT,
+            UNIQUE(event_date, venue_name)
+        )
+        """)
+
+        unique_dates = sorted(
+            {
                 str(record["date"])
                 for record in records
-            )
+            }
         )
-
-        placeholders = ",".join(["?"] * len(unique_dates))
-
-        cursor.execute(
-            f"""
-            DELETE FROM calendar_events
-            WHERE event_date IN ({placeholders})
-            """,
-            unique_dates
-        )
-
-        data_to_insert = [
-            (
-                str(record["date"]),
-                record["venue"]
-            )
-            for record in records
-        ]
 
         cursor.executemany(
             """
-            INSERT OR REPLACE INTO
-            calendar_events
+            DELETE FROM calendar_events
+            WHERE event_date = ?
+            """,
+            [(d,) for d in unique_dates]
+        )
+
+        cursor.executemany(
+            """
+            INSERT INTO calendar_events
             (
                 event_date,
                 venue_name
@@ -98,10 +99,18 @@ def save_records(records):
                 ?
             )
             """,
-            data_to_insert
+            [
+                (
+                    str(record["date"]),
+                    record["venue"],
+                )
+                for record in records
+            ]
         )
 
         conn.commit()
+
+        return len(records)
 
     except Exception:
 
