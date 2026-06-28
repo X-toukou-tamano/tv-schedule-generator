@@ -308,34 +308,45 @@ with col2:
 
     else:
 
-        st.info("開催なし")
-
-st.divider()
-
-st.subheader("PowerPoint")
-
 if st.button("PPT生成"):
 
     from ppt_generator import create_powerpoint
+    from zip_utils import create_zip
 
-    output_path = create_powerpoint(
-        day_events,
-        night_events,
-        today_str,
-    )
+    ppt_paths = []
+
+    for (
+        event_date,
+        (
+            day_events,
+            night_events,
+            _,
+            _,
+        ),
+    ) in schedule_data_by_date.items():
+
+        output_path = create_powerpoint(
+            day_events,
+            night_events,
+            event_date,
+        )
+
+        ppt_paths.append(output_path)
+
+    zip_path = create_zip(ppt_paths)
 
     st.success(
         "PowerPoint生成完了"
     )
 
     with open(
-        output_path,
+        zip_path,
         "rb"
     ) as f:
 
         st.download_button(
-            label="PPTダウンロード",
+            label="ZIPダウンロード",
             data=f,
-            file_name=os.path.basename(output_path),
-            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            file_name=os.path.basename(zip_path),
+            mime="application/zip"
         )
