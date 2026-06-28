@@ -249,6 +249,57 @@ def save_update_time():
     conn.close()
 
 
+def save_generate_history(
+    history_type,
+    start_date,
+    end_date,
+):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO system_meta
+        (
+            meta_key,
+            meta_value
+        )
+        VALUES
+        (
+            ?,
+            ?
+        )
+        """,
+        (
+            f"{history_type}_from",
+            str(start_date),
+        ),
+    )
+
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO system_meta
+        (
+            meta_key,
+            meta_value
+        )
+        VALUES
+        (
+            ?,
+            ?
+        )
+        """,
+        (
+            f"{history_type}_to",
+            str(end_date),
+        ),
+    )
+
+    conn.commit()
+    conn.close()
+
+
 def get_update_time():
 
     conn = get_connection()
@@ -270,3 +321,44 @@ def get_update_time():
     conn.close()
 
     return row[0] if row else None
+
+
+def get_generate_history(
+    history_type,
+):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT meta_value
+        FROM system_meta
+        WHERE meta_key = ?
+        """,
+        (
+            f"{history_type}_from",
+        ),
+    )
+
+    row_from = cursor.fetchone()
+
+    cursor.execute(
+        """
+        SELECT meta_value
+        FROM system_meta
+        WHERE meta_key = ?
+        """,
+        (
+            f"{history_type}_to",
+        ),
+    )
+
+    row_to = cursor.fetchone()
+
+    conn.close()
+
+    return (
+        row_from[0] if row_from else None,
+        row_to[0] if row_to else None,
+    )
