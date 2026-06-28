@@ -28,7 +28,7 @@ def get_today_sorted_data():
         for row in excel_data
     })
 
-    return schedule_data_by_date
+    race_data = get_schedule(months)
 
     vinfo_map = {}
 
