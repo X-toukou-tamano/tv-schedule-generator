@@ -62,9 +62,9 @@ def build_display_text(
 
     return (
         f"{name}"
-        f"　     "
+        f"      "
         f"{grade}"
-        f"      　"
+        f"       "
         f"{status}"
     )
 
@@ -243,10 +243,10 @@ def create_powerpoint(
 
     date_str = event_date.replace("-", "")
 
-output_path = os.path.join(
-    upload_dir,
-    f"場内放映予定{date_str}.pptx"
-)
+    output_path = os.path.join(
+        upload_dir,
+        f"場内放映予定{date_str}.pptx"
+    )
 
     prs.save(output_path)
 
