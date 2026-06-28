@@ -308,6 +308,12 @@ with col2:
 
     else:
 
+        st.info("開催なし")
+
+st.divider()
+
+st.subheader("PowerPoint")
+
 if st.button("PPT生成"):
 
     from ppt_generator import create_powerpoint
