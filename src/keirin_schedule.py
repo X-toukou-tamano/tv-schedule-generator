@@ -1,9 +1,18 @@
-# keirin_schedule.py
-
 import re
 import requests
 from bs4 import BeautifulSoup
 from datetime import date, timedelta
+
+DAY_ICON_MAP = {
+    "ico_day1.png": "初日",
+    "ico_day2.png": "2日目",
+    "ico_day3.png": "3日目",
+    "ico_day4.png": "4日目",
+    "ico_day5.png": "5日目",
+    "ico_day6.png": "6日目",
+    "ico_day7.png": "7日目",
+    "ico_fday.png": "最終日",
+}
 
 BASE_URL = "https://keirin.jp/pc/raceschedule"
 
@@ -99,7 +108,22 @@ def parse_month(year, month):
 
                         if m:
                             kubun = m.group(1)
+                    # ---------- 開催日 ----------
+                    nichiji = "-"
 
+                    day_img = td.select_one(
+                        'img[src*="ico_day"], img[src*="ico_fday"]'
+                    )
+
+                    if day_img:
+
+                        src = day_img["src"]
+
+                        for k, v in DAY_ICON_MAP.items():
+
+                            if k in src:
+                                nichiji = v
+                                break
                     # ---------- encp ----------
                     encp = ""
 
@@ -126,6 +150,8 @@ def parse_month(year, month):
                         "grade": grade,
 
                         "kubun": kubun,
+
+                        "nichiji": nichiji,
 
                         "encp": encp,
 
@@ -166,7 +192,7 @@ def get_schedule(months):
 
                     "gradeIconName": s["grade"],
 
-                    "nichijiIconName": s["encp"],
+                    "nichijiIconName": s["nichiji"],
 
                     "kubunIconName": s["kubun"],
 
