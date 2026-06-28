@@ -68,11 +68,8 @@ def get_schedule_data(start_date, end_date):
         for row in excel_by_date[event_date]:
 
             venue_name = row["venue"]
-
             grade = row["grade"]
-
             kubun = row["kubun"]
-
             nichiji = row["nichiji"]
 
             if (
@@ -88,15 +85,10 @@ def get_schedule_data(start_date, end_date):
             ).strip()
 
             if kubun_code == "1":
-
                 session_type = "day"
-
             elif kubun_code == "3":
-
                 session_type = "night"
-
             else:
-
                 continue
 
             current_day_merged_data.append(
@@ -108,7 +100,6 @@ def get_schedule_data(start_date, end_date):
                 }
             )
 
-        # その日が未公開なら終了
         if not is_all_venues_available:
             break
 
