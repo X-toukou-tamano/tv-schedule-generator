@@ -320,7 +320,8 @@ if st.button("PPT生成"):
 
     output_path = create_powerpoint(
         day_events,
-        night_events
+        night_events,
+        today_str,
     )
 
     st.success(
