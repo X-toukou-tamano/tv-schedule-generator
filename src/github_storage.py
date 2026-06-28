@@ -7,16 +7,30 @@ from github.GithubException import UnknownObjectException
 # GitHub接続
 # ----------------------------
 
-REPO_NAME = st.secrets["GITHUB_REPOSITORY"]
-
-TOKEN = st.secrets["GITHUB_TOKEN"]
-
 FOLDER = "excel_data"
 
 
 def get_repo():
-    g = Github(TOKEN)
-    return g.get_repo(REPO_NAME)
+    """
+    Secretsはimport時ではなく、
+    実際にGitHubへアクセスする時だけ取得する。
+    """
+
+    try:
+
+        repo_name = st.secrets["GITHUB_REPOSITORY"]
+
+        token = st.secrets["GITHUB_TOKEN"]
+
+    except Exception as e:
+
+        raise RuntimeError(
+            "GitHub Secrets が設定されていません。"
+        ) from e
+
+    g = Github(token)
+
+    return g.get_repo(repo_name)
 
 
 # ----------------------------
@@ -28,9 +42,11 @@ def list_excels():
     repo = get_repo()
 
     try:
+
         files = repo.get_contents(FOLDER)
 
     except UnknownObjectException:
+
         return []
 
     return sorted(
@@ -48,7 +64,7 @@ def list_excels():
 
 def upload_excel(
     file_bytes,
-    filename
+    filename,
 ):
 
     repo = get_repo()
@@ -63,7 +79,7 @@ def upload_excel(
             path=path,
             message=f"Update {filename}",
             content=file_bytes,
-            sha=old.sha
+            sha=old.sha,
         )
 
     except UnknownObjectException:
@@ -71,8 +87,10 @@ def upload_excel(
         repo.create_file(
             path=path,
             message=f"Create {filename}",
-            content=file_bytes
+            content=file_bytes,
         )
+
+
 # ----------------------------
 # Excelダウンロード
 # ----------------------------
@@ -85,7 +103,9 @@ def download_excel(filename):
 
     file = repo.get_contents(path)
 
-    return io.BytesIO(file.decoded_content)
+    return io.BytesIO(
+        file.decoded_content
+    )
 
 
 # ----------------------------
