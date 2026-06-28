@@ -4,8 +4,6 @@ from zoneinfo import ZoneInfo
 
 
 def get_connection():
-    import os
-    print(os.path.abspath("tv_schedule.db"))
     conn = sqlite3.connect("tv_schedule.db")
     return conn
 
