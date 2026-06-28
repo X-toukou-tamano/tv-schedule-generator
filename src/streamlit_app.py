@@ -250,7 +250,7 @@ from database import get_events
 
 rows = get_events()
 
-st.write(type(rows))
+st.write(rows)
 
 st.stop()
 
