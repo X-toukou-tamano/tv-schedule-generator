@@ -2,8 +2,6 @@ from datetime import date
 
 from database import get_events
 from event_sorter import split_and_sort_events
-from keirin_schedule import get_schedule
-
 
 def get_today_sorted_data():
     """
@@ -14,32 +12,23 @@ def get_today_sorted_data():
 
     excel_data = []
 
-    for event_date, venue_name in rows:
+    for (
+        event_date,
+        venue_name,
+        grade,
+        kubun,
+        nichiji,
+    ) in rows:
 
         excel_data.append(
             {
                 "date": date.fromisoformat(event_date),
                 "venue": venue_name,
+                "grade": grade,
+                "kubun": kubun,
+                "nichiji": nichiji,
             }
         )
-
-    months = sorted({
-        (row["date"].year, row["date"].month)
-        for row in excel_data
-    })
-
-    race_data = get_schedule(months)
-
-    vinfo_map = {}
-
-    for info in race_data["RaceList"]:
-
-        key = (
-            info["kaisaiDate"],
-            info["keirinjoName"]
-        )
-
-        vinfo_map[key] = info
 
     # 1. まずExcelデータを日付ごとにまとめる
     excel_by_date = {}
@@ -67,23 +56,16 @@ def get_today_sorted_data():
 
             venue_name = row["venue"]
 
-            key = (
-                event_date.replace("-", ""),
-                venue_name
-            )
+            grade = row["grade"]
+            kubun = row["kubun"]
+            nichiji = row["nichiji"]
 
-            # 1場でも欠けたら終了
-            if key not in vinfo_map:
+            if not grade or not kubun or not nichiji:
                 is_all_venues_available = False
                 break
 
-            info = vinfo_map[key]
-
             kubun_code = str(
-                info.get(
-                    "kubunIconName",
-                    ""
-                )
+                kubun
             ).strip()
 
             if kubun_code == "1":
@@ -99,14 +81,8 @@ def get_today_sorted_data():
                 {
                     "name": venue_name,
                     "session": session_type,
-                    "grade": info.get(
-                        "gradeIconName",
-                        "-"
-                    ),
-                    "status": info.get(
-                        "nichijiIconName",
-                        "-"
-                    ),
+                    "grade": grade,
+                    "status": nichiji,
                 }
             )
 
