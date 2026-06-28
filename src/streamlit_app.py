@@ -19,7 +19,10 @@ from github_storage import (
     list_excels,
 )
 from schedule_updater import update_schedule_info
-from ppt_service import generate_range_ppt
+from ppt_service import (
+    generate_range_ppt,
+    generate_all_ppt,
+)
 import os
 
 USERNAME = "tamano-keirin_TVroom"
@@ -272,46 +275,67 @@ if st.button(
     use_container_width=True,
 ):
 
-    # 開始日と終了日の前後関係をチェック
     if selected_start > selected_end:
-
         st.error("開始日が終了日より後になっています。")
-
     else:
-
         zip_path = generate_range_ppt(
             selected_start,
             selected_end,
         )
 
         if zip_path is None:
-
+            # 古いZIP情報を確実にクリア
+            st.session_state["zip_path"] = None
+            st.session_state["success_msg"] = None
             st.warning(
                 "指定期間に生成できるデータがありません。"
             )
-
         else:
+            # session_stateに保存
+            st.session_state["zip_path"] = zip_path
+            st.session_state["success_msg"] = f"{selected_start} ～ {selected_end} を生成しました。"
 
-            st.success(
-                f"{selected_start} ～ {selected_end} を生成しました。"
-            )
 
-            with open(
-                zip_path,
-                "rb",
-            ) as f:
-
-                st.download_button(
-                    label="ZIPダウンロード",
-                    data=f,
-                    file_name=os.path.basename(zip_path),
-                    mime="application/zip",
-                    use_container_width=True,
-                )
-
-st.button(
+if st.button(
     "公開済み全期間を生成",
-    use_container_width=True
-)
+    use_container_width=True,
+):
+
+    zip_path, last_date = generate_all_ppt()
+
+    if zip_path is None:
+        # 古いZIP情報を確実にクリア
+        st.session_state["zip_path"] = None
+        st.session_state["success_msg"] = None
+        st.warning(
+            "生成できるデータがありません。"
+        )
+    else:
+        # session_stateに保存
+        st.session_state["zip_path"] = zip_path
+        st.session_state["success_msg"] = f"{db_start_date} ～ {last_date} を生成しました。"
+
+
+# --- ダウンロードボタンの表示エリア ---
+if (
+    "zip_path" in st.session_state 
+    and st.session_state["zip_path"] is not None
+    and "success_msg" in st.session_state
+):
+    
+    st.success(st.session_state["success_msg"])
+    
+    with open(
+        st.session_state["zip_path"],
+        "rb",
+    ) as f:
+
+        st.download_button(
+            label="ZIPダウンロード",
+            data=f,
+            file_name=os.path.basename(st.session_state["zip_path"]),
+            mime="application/zip",
+            use_container_width=True,
+        )
 
 st.divider()
