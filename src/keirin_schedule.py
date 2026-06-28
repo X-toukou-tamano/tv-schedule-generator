@@ -1,18 +1,7 @@
+import json
 import re
 import requests
 from bs4 import BeautifulSoup
-from datetime import date, timedelta
-
-DAY_ICON_MAP = {
-    "ico_day1.png": "初日",
-    "ico_day2.png": "2日目",
-    "ico_day3.png": "3日目",
-    "ico_day4.png": "4日目",
-    "ico_day5.png": "5日目",
-    "ico_day6.png": "6日目",
-    "ico_day7.png": "7日目",
-    "ico_fday.png": "最終日",
-}
 
 BASE_URL = "https://keirin.jp/pc/raceschedule"
 
@@ -20,182 +9,100 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
 
-GRADE_MAP = {
-    "ico_gp.png": "GP",
-    "ico_g1.png": "G1",
-    "ico_g2.png": "G2",
-    "ico_g3.png": "G3",
-    "ico_f1.png": "F1",
-    "ico_f2.png": "F2",
-}
-
 
 def get_month_html(year, month):
-
     url = f"{BASE_URL}?scyy={year}&scym={month:02d}"
-
     r = requests.get(
         url,
         headers=HEADERS,
         timeout=30
     )
-
     r.raise_for_status()
-
     return r.text
 
 
+def get_racelist(encp):
+    r = requests.post(
+        "https://keirin.jp/pc/racelist",
+        headers=HEADERS,
+        data={
+            "encp": encp,
+            "disp": "PJ0301",
+        },
+        timeout=30,
+    )
+    r.raise_for_status()
+    html = r.text
+    
+    m = re.search(
+        r"var\s+pc0101_json\s*=\s*(\{[\s\S]*?\});",
+        html,
+    )
+    if m is None:
+        raise RuntimeError("pc0101_json が見つかりません")
+        
+    return json.loads(m.group(1))
+
+
 def parse_month(year, month):
-
     html = get_month_html(year, month)
-
     soup = BeautifulSoup(html, "html.parser")
-
     schedules = []
-
     tables = soup.select("table.chiku_tbl")
 
     for table in tables:
-
         tbody = table.find("tbody")
-
         if tbody is None:
             continue
-
+        
         rows = tbody.find_all("tr")
-
         for row in rows:
-
             cols = row.find_all("td")
-
             if len(cols) < 2:
                 continue
-
+            
             place = cols[0].get_text(strip=True)
 
-            day = 1
-
             for td in cols[1:]:
-
-                colspan = int(td.get("colspan", 1))
-
-                grade_img = td.select_one("img.gradeIconSize")
-
-                if grade_img:
-
-                    # ---------- グレード ----------
-                    grade = "-"
-
-                    src = grade_img["src"]
-
-                    for k, v in GRADE_MAP.items():
-
-                        if k in src:
-                            grade = v
-                            break
-
-                    # ---------- 開催区分 ----------
-                    kubun = ""
-
-                    hold = td.select_one("img.HoldingIconSize")
-
-                    if hold:
-
-                        m = re.search(
-                            r'ico_kaisai_(\d+)\.png',
-                            hold["src"]
-                        )
-
-                        if m:
-                            kubun = m.group(1)
-                    # ---------- 開催日 ----------
-                    nichiji = "-"
-
-                    day_img = td.select_one(
-                        'img[src*="ico_day"], img[src*="ico_fday"]'
-                    )
-
-                    if day_img:
-
-                        src = day_img["src"]
-
-                        for k, v in DAY_ICON_MAP.items():
-
-                            if k in src:
-                                nichiji = v
-                                break
-                    # ---------- encp ----------
+                # img.gradeIconSize があればレース開催日とみなす
+                if td.select_one("img.gradeIconSize"):
                     encp = ""
-
                     a = td.find("a")
-
                     if a:
-
-                        encp = a.get(
-                            "data-pprm-encp",
-                            ""
-                        )
+                        encp = a.get("data-pprm-encp", "")
 
                     schedules.append({
-
-                        "year": year,
-                        "month": month,
-
                         "place": place,
-
-                        "start_day": day,
-
-                        "length": colspan,
-
-                        "grade": grade,
-
-                        "kubun": kubun,
-
-                        "nichiji": nichiji,
-
                         "encp": encp,
-
                     })
-
-                day += colspan
 
     return schedules
 
 
 def get_schedule(months):
-
     race_list = []
 
     for year, month in months:
-
         print(f"{year}/{month} 取得中...")
-
         schedules = parse_month(year, month)
 
         for s in schedules:
+            if not s["encp"]:
+                continue
 
-            start = date(
-                s["year"],
-                s["month"],
-                s["start_day"]
-            )
+            try:
+                obj = get_racelist(s["encp"])
+            except Exception as e:
+                print(f"RaceList取得失敗 {s['place']} : {e}")
+                continue
 
-            for i in range(s["length"]):
-
-                race_date = start + timedelta(days=i)
-
+            for race in obj.get("RaceList", []):
                 race_list.append({
-
-                    "kaisaiDate": race_date.strftime("%Y%m%d"),
-
-                    "keirinjoName": s["place"],
-
-                    "gradeIconName": s["grade"],
-
-                    "nichijiIconName": s["nichiji"],
-
-                    "kubunIconName": s["kubun"],
-
+                    "kaisaiDate": race["kaisaiDate"],
+                    "keirinjoName": race["keirinjoName"],
+                    "gradeIconName": race["gradeIconName"],
+                    "nichijiIconName": race["nichijiIconName"],
+                    "kubunIconName": race["kubunIconName"],
                 })
 
     return {
