@@ -1,5 +1,7 @@
+from datetime import date
+
+from database import get_events
 from event_sorter import split_and_sort_events
-from excel_reader import parse_excel
 from keirin_schedule import get_schedule
 
 
@@ -8,7 +10,18 @@ def get_today_sorted_data():
     スケジュールデータ構築（公開判定によるbreak付き）
     """
 
-    excel_data = parse_excel()
+    rows = get_events()
+
+    excel_data = []
+
+    for event_date, venue_name in rows:
+
+        excel_data.append(
+            {
+                "date": date.fromisoformat(event_date),
+                "venue": venue_name,
+            }
+        )
 
     months = sorted({
         (row["date"].year, row["date"].month)
@@ -53,17 +66,17 @@ def get_today_sorted_data():
         for row in excel_by_date[event_date]:
 
             venue_name = row["venue"]
+
             key = (
                 event_date.replace("-", ""),
                 venue_name
             )
 
-            # 1場でも欠けたらフラグを倒してループを抜ける
+            # 1場でも欠けたら終了
             if key not in vinfo_map:
                 is_all_venues_available = False
                 break
 
-            # 存在する場合はデータを抽出
             info = vinfo_map[key]
 
             kubun_code = str(
@@ -72,8 +85,6 @@ def get_today_sorted_data():
                     ""
                 )
             ).strip()
-
-            session_type = None
 
             if kubun_code == "1":
                 session_type = "day"
@@ -84,59 +95,47 @@ def get_today_sorted_data():
             else:
                 continue
 
-            status_text = info.get(
-                "nichijiIconName",
-                "-"
-            )
-
-            grade_text = info.get(
-                "gradeIconName",
-                "-"
-            )
-
             current_day_merged_data.append(
                 {
                     "name": venue_name,
                     "session": session_type,
-                    "grade": grade_text,
-                    "status": status_text,
+                    "grade": info.get(
+                        "gradeIconName",
+                        "-"
+                    ),
+                    "status": info.get(
+                        "nichijiIconName",
+                        "-"
+                    ),
                 }
             )
 
-        # 1場でも欠けていたら、翌日以降の処理もすべて終了（break）
+        # 1場でも未公開ならそこで終了
         if not is_all_venues_available:
             break
 
-        # 全部揃っていれば分類・ソートを行う
         day_events, night_events = split_and_sort_events(
             current_day_merged_data
         )
 
-        preview_day = []
+        preview_day = [
+            {
+                "name": ev["name"],
+                "grade": ev["grade"],
+                "status": ev["status"],
+            }
+            for ev in day_events
+        ]
 
-        for ev in day_events:
+        preview_night = [
+            {
+                "name": ev["name"],
+                "grade": ev["grade"],
+                "status": ev["status"],
+            }
+            for ev in night_events
+        ]
 
-            preview_day.append(
-                {
-                    "name": ev["name"],
-                    "grade": ev["grade"],
-                    "status": ev["status"],
-                }
-            )
-
-        preview_night = []
-
-        for ev in night_events:
-
-            preview_night.append(
-                {
-                    "name": ev["name"],
-                    "grade": ev["grade"],
-                    "status": ev["status"],
-                }
-            )
-
-        # 結果を格納
         schedule_data_by_date[event_date] = (
             day_events,
             night_events,
