@@ -13,8 +13,6 @@ from excel_reader import (
     get_upload_info,
 )
 
-from today_service import get_today_sorted_data
-
 from github_storage import (
     upload_excel,
     download_excel,
@@ -104,6 +102,7 @@ if summary[2] == 0:
         st.warning(
             f"{target} のExcelが見つかりません。"
         )
+
 # ----------------------------
 # ログイン状態管理
 # ----------------------------
@@ -140,6 +139,7 @@ if not st.session_state.logged_in:
             )
 
     st.stop()
+
 # ----------------------------
 # ダッシュボード
 # ----------------------------
@@ -149,8 +149,8 @@ st.title("TV放映予定管理システム")
 summary = get_summary()
 last_update = get_update_time()
 
-start_date = summary[0]
-end_date = summary[1]
+db_start_date = summary[0]
+db_end_date = summary[1]
 total_count = summary[2]
 
 st.success("ログイン成功")
@@ -166,13 +166,13 @@ with col1:
 with col2:
     st.metric(
         "開始日",
-        start_date if start_date else "-"
+        db_start_date if db_start_date else "-"
     )
 
 with col3:
     st.metric(
         "終了日",
-        end_date if end_date else "-"
+        db_end_date if db_end_date else "-"
     )
 
 st.write("")
@@ -239,121 +239,37 @@ if uploaded_file is not None:
         )
 
         st.rerun()
+
 # ----------------------------
 # 仮表示エリア
 # ----------------------------
 
 st.divider()
 
-st.subheader("本日開催")
-
-schedule_data_by_date = get_today_sorted_data()
-
-if schedule_data_by_date:
-
-    today_str = next(iter(schedule_data_by_date))
-
-    (
-        day_events,
-        night_events,
-        preview_day,
-        preview_night,
-    ) = schedule_data_by_date[today_str]
-
-else:
-
-    today_str = "-"
-
-    day_events = []
-    night_events = []
-    preview_day = []
-    preview_night = []
-
-st.caption(
-    f"対象日: {today_str}"
-)
+st.subheader("PowerPoint生成")
 
 col1, col2 = st.columns(2)
 
 with col1:
 
-    st.markdown("### デイ")
-
-    if preview_day:
-
-        for item in preview_day:
-
-            st.write(
-                f"{item['name']} "
-                f"{item['grade']} "
-                f"{item['status']}"
-            )
-
-    else:
-
-        st.info("開催なし")
+    selected_start = st.date_input(
+        "開始日"
+    )
 
 with col2:
 
-    st.markdown("### ナイター")
-
-    if preview_night:
-
-        for item in preview_night:
-
-            st.write(
-                f"{item['name']} "
-                f"{item['grade']} "
-                f"{item['status']}"
-            )
-
-    else:
-
-        st.info("開催なし")
-
-st.divider()
-
-st.subheader("PowerPoint")
-
-if st.button("PPT生成"):
-
-    from ppt_generator import create_powerpoint
-    from zip_utils import create_zip
-
-    ppt_paths = []
-
-    for (
-        event_date,
-        (
-            day_events,
-            night_events,
-            _,
-            _,
-        ),
-    ) in schedule_data_by_date.items():
-
-        output_path = create_powerpoint(
-            day_events,
-            night_events,
-            event_date,
-        )
-
-        ppt_paths.append(output_path)
-
-    zip_path = create_zip(ppt_paths)
-
-    st.success(
-        "PowerPoint生成完了"
+    selected_end = st.date_input(
+        "終了日"
     )
 
-    with open(
-        zip_path,
-        "rb"
-    ) as f:
+st.button(
+    "指定期間を生成",
+    use_container_width=True
+)
 
-        st.download_button(
-            label="ZIPダウンロード",
-            data=f,
-            file_name=os.path.basename(zip_path),
-            mime="application/zip"
-        )
+st.button(
+    "公開済み全期間を生成",
+    use_container_width=True
+)
+
+st.divider()
