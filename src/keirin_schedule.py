@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, timedelta
 
 URL = "https://keirin.jp/pc/raceschedule"
 
@@ -13,103 +12,115 @@ GRADE_MAP = {
     "ico_f2.png": "F2",
 }
 
-
-def grade_from_img(src):
-    for k, v in GRADE_MAP.items():
-        if k in src:
-            return v
-    return "不明"
-
-
-def is_night(place):
-    """現状はナイター場判定（必要に応じて追加）"""
-    night = {
-        "小倉","玉野","岐阜","武雄","佐世保",
-        "高知","松山","別府","久留米"
-    }
-    return place in night
+NIGHT_VENUES = {
+    "小倉",
+    "玉野",
+    "岐阜",
+    "武雄",
+    "佐世保",
+    "高知",
+    "松山",
+    "別府",
+    "久留米",
+}
 
 
-def parse():
+def get_schedule_data():
 
-    html = requests.get(URL).text
+    html = requests.get(
+        URL,
+        headers={
+            "User-Agent": "Mozilla/5.0"
+        },
+        timeout=30,
+    ).text
+
     soup = BeautifulSoup(html, "html.parser")
 
-    results = []
+    year = soup.find(id="dispYearData")["value"]
+    month = soup.find(id="dispDayData")["value"]
+
+    result = {}
 
     tables = soup.select("table.chiku_tbl")
 
     for table in tables:
 
-        rows = table.select("tbody tr")
+        tbody = table.find("tbody")
+
+        if tbody is None:
+            continue
+
+        rows = tbody.find_all("tr")
 
         for row in rows:
 
-            tds = row.find_all("td")
+            cols = row.find_all("td")
 
-            if len(tds) < 2:
+            if len(cols) < 2:
                 continue
 
-            place = tds[0].get_text(strip=True)
+            place = cols[0].get_text(strip=True)
 
             day = 1
 
-            for td in tds[1:]:
+            for td in cols[1:]:
 
                 colspan = int(td.get("colspan", 1))
 
-                img = td.select_one("img.gradeIconSize")
+                grade_img = td.select_one("img.gradeIconSize")
 
-                if img:
+                if grade_img:
 
-                    grade = grade_from_img(img["src"])
+                    src = grade_img["src"]
 
-                    start = day
-                    length = colspan
-                    end = start + length - 1
+                    grade = "-"
 
-                    schedule = []
+                    for k, v in GRADE_MAP.items():
 
-                    for i in range(length):
+                        if k in src:
+                            grade = v
+                            break
 
-                        d = start + i
+                    session = (
+                        "night"
+                        if place in NIGHT_VENUES
+                        else "day"
+                    )
 
-                        if i == length - 1:
+                    for offset in range(colspan):
+
+                        target_day = day + offset
+
+                        date_str = (
+                            f"{year}-{month}-{target_day:02d}"
+                        )
+
+                        if offset == colspan - 1:
                             status = "最終日"
                         else:
-                            status = f"{i+1}日目"
+                            status = f"{offset + 1}日目"
 
-                        schedule.append({
-                            "day": d,
-                            "status": status
-                        })
-
-                    results.append({
-                        "place": place,
-                        "grade": grade,
-                        "type": "ナイター" if is_night(place) else "デイ",
-                        "start": start,
-                        "end": end,
-                        "length": length,
-                        "schedule": schedule
-                    })
+                        result[
+                            (date_str, place)
+                        ] = {
+                            "grade": grade,
+                            "status": status,
+                            "session": session,
+                        }
 
                 day += colspan
 
-    return results
+    return result
 
 
 if __name__ == "__main__":
 
-    data = parse()
+    schedule = get_schedule_data()
 
-    for race in data:
+    for key, value in sorted(schedule.items()):
 
-        print("="*50)
-        print(race["place"])
-        print("グレード :", race["grade"])
-        print("開催 :", race["type"])
-        print(f"{race['start']}日～{race['end']}日 ({race['length']}日間)")
-
-        for d in race["schedule"]:
-            print(f"  {d['day']}日 : {d['status']}")
+        print(
+            key,
+            value,
+        )
