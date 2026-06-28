@@ -1,7 +1,15 @@
+# keirin_schedule.py
+
+import re
 import requests
 from bs4 import BeautifulSoup
 
-URL = "https://keirin.jp/pc/raceschedule"
+BASE_URL = "https://keirin.jp/pc/raceschedule"
+RACELIST_URL = "https://keirin.jp/pc/racelist"
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0"
+}
 
 GRADE_MAP = {
     "ico_gp.png": "GP",
@@ -12,115 +20,150 @@ GRADE_MAP = {
     "ico_f2.png": "F2",
 }
 
-NIGHT_VENUES = {
-    "小倉",
-    "玉野",
-    "岐阜",
-    "武雄",
-    "佐世保",
-    "高知",
-    "松山",
-    "別府",
-    "久留米",
-}
+
+def get_month_html(year, month):
+
+    url = f"{BASE_URL}?scyy={year}&scym={month:02d}"
+
+    r = requests.get(
+        url,
+        headers=HEADERS,
+        timeout=30
+    )
+
+    r.raise_for_status()
+
+    return r.text
 
 
-def get_schedule_data():
+def fetch_racelist(encp):
 
-    html = requests.get(
-        URL,
-        headers={
-            "User-Agent": "Mozilla/5.0"
+    r = requests.post(
+        RACELIST_URL,
+        data={
+            "encp": encp,
+            "disp": "PJ0301"
         },
-        timeout=30,
-    ).text
+        headers=HEADERS,
+        timeout=30
+    )
 
-    soup = BeautifulSoup(html, "html.parser")
+    r.raise_for_status()
 
-    year = soup.find(id="dispYearData")["value"]
-    month = soup.find(id="dispDayData")["value"]
+    return r.text
 
-    result = {}
 
-    tables = soup.select("table.chiku_tbl")
+def get_race_data(months):
 
-    for table in tables:
+    race_list = []
 
-        tbody = table.find("tbody")
+    for year, month in months:
 
-        if tbody is None:
-            continue
+        html = get_month_html(year, month)
 
-        rows = tbody.find_all("tr")
+        soup = BeautifulSoup(html, "html.parser")
 
-        for row in rows:
+        tables = soup.select("table.chiku_tbl")
 
-            cols = row.find_all("td")
+        for table in tables:
 
-            if len(cols) < 2:
+            tbody = table.find("tbody")
+
+            if tbody is None:
                 continue
 
-            place = cols[0].get_text(strip=True)
+            rows = tbody.find_all("tr")
 
-            day = 1
+            for row in rows:
 
-            for td in cols[1:]:
+                cols = row.find_all("td")
 
-                colspan = int(td.get("colspan", 1))
+                if len(cols) < 2:
+                    continue
 
-                grade_img = td.select_one("img.gradeIconSize")
+                place = cols[0].get_text(strip=True)
 
-                if grade_img:
+                day = 1
 
-                    src = grade_img["src"]
+                for td in cols[1:]:
 
-                    grade = "-"
+                    colspan = int(td.get("colspan", 1))
 
-                    for k, v in GRADE_MAP.items():
+                    grade_img = td.select_one("img.gradeIconSize")
 
-                        if k in src:
-                            grade = v
-                            break
+                    if grade_img:
 
-                    session = (
-                        "night"
-                        if place in NIGHT_VENUES
-                        else "day"
-                    )
+                        grade = "-"
 
-                    for offset in range(colspan):
+                        src = grade_img["src"]
 
-                        target_day = day + offset
+                        for k, v in GRADE_MAP.items():
 
-                        date_str = (
-                            f"{year}-{month}-{target_day:02d}"
+                            if k in src:
+                                grade = v
+                                break
+
+                        hold_img = td.select_one("img.HoldingIconSize")
+
+                        kubun = ""
+
+                        if hold_img:
+
+                            m = re.search(
+                                r'ico_kaisai_(\d+)\.png',
+                                hold_img["src"]
+                            )
+
+                            if m:
+                                kubun = m.group(1)
+
+                        a = td.find("a")
+
+                        encp = ""
+
+                        if a:
+
+                            encp = a.get(
+                                "data-pprm-encp",
+                                ""
+                            )
+
+                        print(
+                            place,
+                            grade,
+                            kubun,
+                            encp
                         )
 
-                        if offset == colspan - 1:
-                            status = "最終日"
-                        else:
-                            status = f"{offset + 1}日目"
+                        #
+                        # 次ここで
+                        #
+                        # racelist_html = fetch_racelist(encp)
+                        #
+                        # ↓
+                        #
+                        # 初日
+                        # 2日目
+                        # 最終日
+                        #
+                        # を取得して
+                        #
+                        # RaceListへ追加する
+                        #
 
-                        result[
-                            (date_str, place)
-                        ] = {
-                            "grade": grade,
-                            "status": status,
-                            "session": session,
-                        }
+                    day += colspan
 
-                day += colspan
-
-    return result
+    return {
+        "RaceList": race_list
+    }
 
 
 if __name__ == "__main__":
 
-    schedule = get_schedule_data()
+    data = get_race_data(
+        [
+            (2026, 9),
+        ]
+    )
 
-    for key, value in sorted(schedule.items()):
-
-        print(
-            key,
-            value,
-        )
+    print(data)
