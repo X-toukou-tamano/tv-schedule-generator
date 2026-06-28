@@ -3,9 +3,10 @@ from datetime import date
 from database import get_events
 from event_sorter import split_and_sort_events
 
-def get_today_sorted_data():
+
+def get_schedule_data(start_date, end_date):
     """
-    スケジュールデータ構築（公開判定によるbreak付き）
+    指定期間のスケジュールデータ構築
     """
 
     rows = get_events()
@@ -20,9 +21,20 @@ def get_today_sorted_data():
         nichiji,
     ) in rows:
 
+        event_date_obj = date.fromisoformat(
+            event_date
+        )
+
+        if not (
+            start_date
+            <= event_date_obj
+            <= end_date
+        ):
+            continue
+
         excel_data.append(
             {
-                "date": date.fromisoformat(event_date),
+                "date": event_date_obj,
                 "venue": venue_name,
                 "grade": grade,
                 "kubun": kubun,
@@ -30,7 +42,6 @@ def get_today_sorted_data():
             }
         )
 
-    # 1. まずExcelデータを日付ごとにまとめる
     excel_by_date = {}
 
     for row in excel_data:
@@ -40,16 +51,18 @@ def get_today_sorted_data():
         if event_date not in excel_by_date:
             excel_by_date[event_date] = []
 
-        excel_by_date[event_date].append(row)
+        excel_by_date[event_date].append(
+            row
+        )
 
-    # 最終的な結果を格納する辞書
     schedule_data_by_date = {}
 
-    # 2. 日付ごとに1日ずつ処理
-    for event_date in sorted(excel_by_date.keys()):
+    for event_date in sorted(
+        excel_by_date.keys()
+    ):
 
-        # その日の全場が揃っているかチェック
         is_all_venues_available = True
+
         current_day_merged_data = []
 
         for row in excel_by_date[event_date]:
@@ -57,10 +70,16 @@ def get_today_sorted_data():
             venue_name = row["venue"]
 
             grade = row["grade"]
+
             kubun = row["kubun"]
+
             nichiji = row["nichiji"]
 
-            if not grade or not kubun or not nichiji:
+            if (
+                not grade
+                or not kubun
+                or not nichiji
+            ):
                 is_all_venues_available = False
                 break
 
@@ -69,12 +88,15 @@ def get_today_sorted_data():
             ).strip()
 
             if kubun_code == "1":
+
                 session_type = "day"
 
             elif kubun_code == "3":
+
                 session_type = "night"
 
             else:
+
                 continue
 
             current_day_merged_data.append(
@@ -86,7 +108,7 @@ def get_today_sorted_data():
                 }
             )
 
-        # 1場でも未公開ならそこで終了
+        # その日が未公開なら終了
         if not is_all_venues_available:
             break
 
