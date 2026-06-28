@@ -246,10 +246,17 @@ st.divider()
 
 st.subheader("本日開催")
 
-schedule_data_by_date = get_today_sorted_data()
-st.write(type(schedule_data_by_date))
-st.write(schedule_data_by_date)
+from database import get_events
+
+rows = get_events()
+
+st.write(type(rows))
+st.write(rows)
+
 st.stop()
+
+schedule_data_by_date = get_today_sorted_data()
+
 if schedule_data_by_date:
 
     today_str = next(iter(schedule_data_by_date))
