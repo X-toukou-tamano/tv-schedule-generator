@@ -1,7 +1,6 @@
 from today_service import get_schedule_data
 
 from ppt_generator import create_powerpoint
-
 from zip_utils import create_zip
 
 
@@ -17,6 +16,9 @@ def generate_range_ppt(
         start_date,
         end_date,
     )
+
+    if not schedule_data_by_date:
+        return None
 
     ppt_paths = []
 
@@ -36,12 +38,6 @@ def generate_range_ppt(
             event_date,
         )
 
-        ppt_paths.append(
-            output_path
-        )
+        ppt_paths.append(output_path)
 
-    zip_path = create_zip(
-        ppt_paths
-    )
-
-    return zip_path
+    return create_zip(ppt_paths)
