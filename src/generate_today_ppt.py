@@ -8,6 +8,7 @@ from database import (
     save_records,
 )
 from excel_reader import parse_excel
+from schedule_updater import update_schedule_info
 from today_service import get_schedule_data
 from ppt_generator import create_powerpoint
 
@@ -59,6 +60,8 @@ def main():
             save_records(
                 records
             )
+
+            update_schedule_info()
 
     today = datetime.now(
         ZoneInfo("Asia/Tokyo")
