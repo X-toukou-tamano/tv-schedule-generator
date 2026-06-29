@@ -19,6 +19,8 @@ def get_month_html(year, month):
     )
     r.raise_for_status()
     return r.text
+
+
 def get_racelist(encp):
     r = requests.post(
         "https://keirin.jp/pc/racelist",
@@ -52,9 +54,12 @@ def get_racelist(encp):
         "PC0201": json.loads(m1.group(1)),
         "PJ0301": json.loads(m2.group(1)),
     }
+
+
 def parse_month(year, month):
     html = get_month_html(year, month)
     soup = BeautifulSoup(html, "html.parser")
+
     schedules = []
     tables = soup.select("table.chiku_tbl")
 
@@ -62,26 +67,26 @@ def parse_month(year, month):
         tbody = table.find("tbody")
         if tbody is None:
             continue
-        
+
         rows = tbody.find_all("tr")
+
         for row in rows:
             cols = row.find_all("td")
+
             if len(cols) < 2:
                 continue
-            
+
             place = cols[0].get_text(strip=True)
 
             for td in cols[1:]:
-                # img.gradeIconSize があればレース開催日とみなす
+
                 if td.select_one("img.gradeIconSize"):
-                    encp = ""
+
                     a = td.find("a")
-                    if a:
-                        encp = a.get("data-pprm-encp", "")
 
                     schedules.append({
                         "place": place,
-                        "encp": encp,
+                        "encp": a.get("data-pprm-encp", "") if a else "",
                     })
 
     return schedules
@@ -92,9 +97,11 @@ def get_schedule(months):
 
     for year, month in months:
         print(f"{year}/{month} 取得中...")
+
         schedules = parse_month(year, month)
 
         for s in schedules:
+
             if not s["encp"]:
                 continue
 
@@ -104,15 +111,18 @@ def get_schedule(months):
                 print(f"RaceList取得失敗 {s['place']} : {e}")
                 continue
 
-            for race in obj.get("RaceList", []):
-                race_list.append({
-                    "kaisaiDate": race["kaisaiDate"],
-                    "keirinjoName": race["keirinjoName"],
-                    "gradeIconName": race["gradeIconName"],
-                    "nichijiIconName": race["nichijiIconName"],
-                    "kubunIconName": race["kubunIconName"],
-                })
+            # まだここは旧処理
+            print(obj.keys())
 
     return {
         "RaceList": race_list
     }
+
+
+if __name__ == "__main__":
+
+    result = get_schedule([
+        (2026, 6),
+    ])
+
+    print(result)
