@@ -38,7 +38,6 @@ create_tables()
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import tempfile
 
 summary = get_summary()
 # ----------------------------
@@ -169,26 +168,18 @@ if uploaded_file is not None:
 
     if st.button("DB更新"):
 
-        temp_dir = tempfile.gettempdir()
+        os.makedirs("excel_data", exist_ok=True)
 
-        temp_path = os.path.join(
-            temp_dir,
+        temp_name = os.path.join(
+            "excel_data",
             uploaded_file.name
         )
 
-        with open(
-            temp_path,
-            "wb"
-        ) as f:
-
-            f.write(
-                uploaded_file.getbuffer()
-            )
-
-        os.makedirs("excel_data", exist_ok=True)
+        with open(temp_name, "wb") as f:
+            f.write(uploaded_file.getbuffer())
 
         year, term = get_upload_info(
-            temp_path
+            temp_name
         )
 
         filename = f"{year}_{term}.xlsx"
@@ -198,8 +189,10 @@ if uploaded_file is not None:
             filename
         )
 
-        with open(save_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+        os.replace(
+            temp_name,
+            save_path
+        )
 
         records = parse_excel(
             save_path
@@ -207,7 +200,6 @@ if uploaded_file is not None:
 
         save_records(records)
 
-        summary = get_summary()
         count = update_schedule_info()
 
         save_update_time()
