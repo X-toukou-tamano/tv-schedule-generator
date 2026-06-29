@@ -22,7 +22,6 @@ def get_month_html(year, month):
 
 
 def get_racelist(encp):
-    print("ここまで来た")
     r = requests.post(
         "https://keirin.jp/pc/racelist",
         headers=HEADERS,
@@ -37,12 +36,11 @@ def get_racelist(encp):
     print("status :", r.status_code)
     print("url    :", r.url)
     print("encp   :", encp)
-    print("-" * 80)
     print(r.text[:1000])
     print("=" * 80)
 
-    if r.status_code != 200:
-        raise RuntimeError(f"HTTP {r.status_code}")
+    # ← 一旦コメントアウト
+    # r.raise_for_status()
 
     html = r.text
 
