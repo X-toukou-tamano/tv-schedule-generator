@@ -9,6 +9,11 @@ DB_PATH = os.path.join(
     "tv_schedule.db"
 )
 
+
+def get_connection():
+    return sqlite3.connect(DB_PATH)
+
+
 def create_tables():
 
     conn = get_connection()
@@ -40,8 +45,6 @@ def create_tables():
     FROM sqlite_master
     WHERE type='table'
     """)
-
-    tables = cursor.fetchall()
 
     for column in ("grade", "kubun", "nichiji"):
         try:
@@ -76,7 +79,7 @@ def save_records(records):
         )
         """)
 
-                unique_dates = sorted(
+        unique_dates = sorted(
             {
                 str(record["date"])
                 for record in records
