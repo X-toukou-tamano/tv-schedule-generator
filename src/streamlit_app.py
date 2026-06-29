@@ -15,11 +15,7 @@ from excel_reader import (
     get_upload_info,
 )
 
-from github_storage import (
-    upload_excel,
-    download_excel,
-    list_excels,
-)
+
 from schedule_updater import update_schedule_info
 from ppt_service import (
     generate_range_ppt,
@@ -37,92 +33,14 @@ st.set_page_config(
 
 import os
 
-st.error(f"DB = {os.path.abspath('tv_schedule.db')}")
-
 # DB初期化
-tables = create_tables()
-st.write(tables)
-
-st.error(f"DB exists = {os.path.exists('tv_schedule.db')}")
+create_tables()
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import tempfile
 
 summary = get_summary()
-st.write(summary)
-
-if summary[2] == 0:
-
-    today = datetime.now(
-        ZoneInfo("Asia/Tokyo")
-    ).date()
-
-    if 4 <= today.month <= 9:
-        term = "上期"
-        reiwa = today.year - 2018
-    else:
-        term = "下期"
-        reiwa = today.year - 2019
-
-    target = f"R{reiwa}_{term}"
-
-    files = list_excels()
-
-    filename = next(
-        (
-            f
-            for f in files
-            if f.startswith(target)
-        ),
-        None
-    )
-
-    if filename is not None:
-
-        try:
-
-            excel = download_excel(
-                filename
-            )
-
-            with tempfile.NamedTemporaryFile(
-                suffix=".xlsx",
-                delete=False
-            ) as tmp:
-
-                tmp.write(
-                    excel.read()
-                )
-
-                temp_path = tmp.name
-
-            records = parse_excel(
-                temp_path
-            )
-
-            saved = save_records(records)
-            st.write(f"保存件数 = {saved}")
-
-            summary = get_summary()
-            st.write(f"DB件数 = {summary}")
-
-            count = update_schedule_info()
-
-            save_update_time()
-
-        except Exception as e:
-
-            st.error(
-                f"Excel読込エラー: {e}"
-            )
-
-    else:
-
-        st.warning(
-            f"{target} のExcelが見つかりません。"
-        )
-
 # ----------------------------
 # ログイン状態管理
 # ----------------------------
@@ -267,26 +185,29 @@ if uploaded_file is not None:
                 uploaded_file.getbuffer()
             )
 
+        os.makedirs("excel_data", exist_ok=True)
+
         year, term = get_upload_info(
             temp_path
         )
 
         filename = f"{year}_{term}.xlsx"
 
-        upload_excel(
-            uploaded_file.getvalue(),
+        save_path = os.path.join(
+            "excel_data",
             filename
         )
 
+        with open(save_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+
         records = parse_excel(
-            temp_path
+            save_path
         )
 
-        saved = save_records(records)
-        st.write(f"保存件数 = {saved}")
+        save_records(records)
 
         summary = get_summary()
-        st.write(f"DB件数 = {summary}")
         count = update_schedule_info()
 
         save_update_time()
@@ -296,7 +217,7 @@ if uploaded_file is not None:
             f"{count}件 開催情報を更新しました"
         )
 
-        # st.rerun()
+        st.rerun()
 
 # ----------------------------
 # パワーポイント生成エリア
