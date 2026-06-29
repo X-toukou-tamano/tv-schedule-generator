@@ -39,7 +39,6 @@ create_tables()
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-summary = get_summary()
 # ----------------------------
 # ログイン状態管理
 # ----------------------------
@@ -82,7 +81,6 @@ if not st.session_state.logged_in:
 # ----------------------------
 
 st.title("TV放映予定管理システム")
-
 summary = get_summary()
 last_update = get_update_time()
 
