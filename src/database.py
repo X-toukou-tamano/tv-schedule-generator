@@ -239,8 +239,7 @@ def get_summary():
 
     conn.close()
 
-    return row
-
+    raise Exception(row)
 
 def save_update_time():
 
