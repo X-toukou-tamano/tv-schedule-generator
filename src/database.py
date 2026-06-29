@@ -223,21 +223,19 @@ def get_summary():
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute(
-        """
+    cursor.execute("""
         SELECT
             MIN(event_date),
             MAX(event_date),
             COUNT(*)
         FROM calendar_events
-        """
-    )
+    """)
 
     row = cursor.fetchone()
 
     conn.close()
 
-    raise Exception(row)
+    return row
 
 def save_update_time():
 
