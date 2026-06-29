@@ -22,6 +22,7 @@ def get_month_html(year, month):
 
 
 def get_racelist(encp):
+    print("ここまで来た")
     r = requests.post(
         "https://keirin.jp/pc/racelist",
         headers=HEADERS,
