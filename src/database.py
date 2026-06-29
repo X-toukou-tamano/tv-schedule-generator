@@ -9,10 +9,6 @@ DB_PATH = os.path.join(
     "tv_schedule.db"
 )
 
-def get_connection():
-    return sqlite3.connect("tv_schedule.db")
-
-
 def create_tables():
 
     conn = get_connection()
@@ -58,8 +54,6 @@ def create_tables():
     conn.commit()
     conn.close()
 
-    return tables
-
 def save_records(records):
 
     if not records:
@@ -82,26 +76,7 @@ def save_records(records):
         )
         """)
 
-        from collections import Counter
-
-        pairs = [
-            (
-                str(record["date"]),
-                record["venue"]
-            )
-            for record in records
-        ]
-
-        dup = [
-            x
-            for x, c in Counter(pairs).items()
-            if c > 1
-        ]
-
-        print("重複件数 =", len(dup))
-        print(dup)
-
-        unique_dates = sorted(
+                unique_dates = sorted(
             {
                 str(record["date"])
                 for record in records
