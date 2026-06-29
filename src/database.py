@@ -10,6 +10,8 @@ def get_connection():
 
 def create_tables():
 
+    print("create_tables() 実行")
+
     conn = get_connection()
     cursor = conn.cursor()
 
