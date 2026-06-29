@@ -60,7 +60,7 @@ def update_schedule_info():
                 race["kaisaiDate"],
                 "%Y%m%d"
             ).strftime("%Y-%m-%d"),
-            race["keirinjoName"],
+            race["keirinjoName"].replace("競輪場", ""),
         )
 
         race_map[key] = race
