@@ -41,6 +41,13 @@ def create_tables():
 
     conn.commit()
 
+    cursor.execute("""
+    SELECT name
+    FROM sqlite_master
+    WHERE type='table'
+    """)
+    raise Exception(cursor.fetchall())
+
     for column in ("grade", "kubun", "nichiji"):
         try:
             cursor.execute(
