@@ -50,6 +50,7 @@ from zoneinfo import ZoneInfo
 import tempfile
 
 summary = get_summary()
+st.write(summary)
 
 if summary[2] == 0:
 
