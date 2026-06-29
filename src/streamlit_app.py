@@ -34,8 +34,9 @@ st.set_page_config(
     page_title="TV放映予定管理",
     layout="wide"
 )
-st.title("TEST 2026-06-29 10:30")
-# DB初期化
+import os
+st.error(os.path.abspath("tv_schedule.db"))
+
 # DB初期化
 create_tables()
 st.error("create_tables() 実行")
