@@ -39,9 +39,6 @@ st.title("TEST 2026-06-29 10:30")
  create_tables()
 st.error("create_tables() 実行")
 
-conn = get_connection()
-cursor = conn.cursor()
-
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import tempfile
