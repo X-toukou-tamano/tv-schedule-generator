@@ -3,13 +3,16 @@ import datetime
 from zoneinfo import ZoneInfo
 
 
+import os
+import sqlite3
+
+DB_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "tv_schedule.db"
+)
+
 def get_connection():
-    import os
-
-    db_path = os.path.abspath("tv_schedule.db")
-    raise Exception(db_path)
-
-    return sqlite3.connect(db_path)
+    return sqlite3.connect(DB_PATH)
 
 
 def create_tables():
