@@ -40,7 +40,8 @@ import os
 st.error(f"DB = {os.path.abspath('tv_schedule.db')}")
 
 # DB初期化
-create_tables()
+tables = create_tables()
+st.write(tables)
 
 st.error(f"DB exists = {os.path.exists('tv_schedule.db')}")
 
