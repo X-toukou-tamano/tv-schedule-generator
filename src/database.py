@@ -10,7 +10,7 @@ def get_connection():
 
 def create_tables():
 
-    print("create_tables() 実行")
+    raise Exception("create_tables() に入った")
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -36,7 +36,6 @@ def create_tables():
 
     conn.commit()
 
-    # 既存DB対応
     for column in ("grade", "kubun", "nichiji"):
         try:
             cursor.execute(
@@ -47,7 +46,6 @@ def create_tables():
 
     conn.commit()
     conn.close()
-
 
 def save_records(records):
 
