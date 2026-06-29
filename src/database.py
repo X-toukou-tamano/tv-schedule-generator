@@ -1,10 +1,10 @@
+raise Exception("DATABASE.PY 読み込まれた")
+
 import sqlite3
 import datetime
 from zoneinfo import ZoneInfo
 
-
 import os
-import sqlite3
 
 DB_PATH = os.path.join(
     os.path.dirname(__file__),
