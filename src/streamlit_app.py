@@ -34,12 +34,15 @@ st.set_page_config(
     page_title="TV放映予定管理",
     layout="wide"
 )
+
 import os
-st.error(os.path.abspath("tv_schedule.db"))
+
+st.error(f"DB = {os.path.abspath('tv_schedule.db')}")
 
 # DB初期化
 create_tables()
-st.error("create_tables() 実行")
+
+st.error(f"DB exists = {os.path.exists('tv_schedule.db')}")
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -92,7 +95,9 @@ if summary[2] == 0:
 
                 temp_path = tmp.name
 
-            records = parse_excel(temp_path)
+            records = parse_excel(
+                temp_path
+            )
 
             save_records(records)
 
