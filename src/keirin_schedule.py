@@ -109,6 +109,9 @@ def get_schedule(months):
 
         schedules = parse_month(year, month)
 
+        # ★まず最初の1件だけ確認
+        print("最初のschedule =", schedules[0])
+
         for s in schedules:
 
             if not s["encp"]:
@@ -118,10 +121,14 @@ def get_schedule(months):
                 obj = get_racelist(s["encp"])
             except Exception as e:
                 print(f"RaceList取得失敗 {s['place']} : {e}")
-                continue
+                break
 
-            # まだここは旧処理
             print(obj.keys())
+
+            # ★最初の1件だけで終了
+            break
+
+        break
 
     return {
         "RaceList": race_list
