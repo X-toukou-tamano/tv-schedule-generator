@@ -29,7 +29,7 @@ def clean_block_name(name):
     if not isinstance(name, str):
         return name
     name = unicodedata.normalize('NFKC', name)
-    name = name.replace(" ", "").replace(" ", "").strip()
+    name = name.replace(" ", "").replace("　", "").strip()
     name = name.replace("&", "＆")
     return name
 
@@ -56,7 +56,7 @@ def find_months(ws, merged_map):
             if not isinstance(value, str):
                 continue
             
-            value = unicodedata.normalize('NFKC', value).replace(" ", "").replace(" ", "").strip()
+            value = unicodedata.normalize('NFKC', value).replace(" ", "").replace("　", "").strip()
             
             match = re.match(r'^([1-9]|1[0-2])月$', value)
             if match:
@@ -98,9 +98,17 @@ def find_block_column(ws, merged_map):
 def normalize_venue_name(raw_name):
     if not isinstance(raw_name, str):
         return None
-        
+
     name = unicodedata.normalize('NFKC', raw_name)
-    name_no_space = name.replace(" ", "").replace(" ", "")
+    name_no_space = name.replace(" ", "").replace("　", "")
+
+    # MNKは除外
+    if "MNK" in name_no_space:
+        return None
+
+    # 借上げ開催は保持
+    if "高松in玉野" in name_no_space:
+        return "高松in玉野"
 
     if re.match(r'^\d+-\d+', name_no_space):
         return "玉野"
@@ -137,7 +145,7 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
             continue
 
         value_str = str(value).strip()
-        value_no_space = value_str.replace(" ", "").replace(" ", "")
+        value_no_space = value_str.replace(" ", "").replace("　", "")
 
         if value_str == "" or value_str in TARGET_BLOCKS:
             continue
@@ -153,16 +161,10 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
 
 def parse_excel(excel_path):
     filename = os.path.basename(excel_path)
-
-    wb = load_workbook(
-        excel_path,
-        data_only=True
-    )
-
+    wb = load_workbook(excel_path, data_only=True)
     records = []
 
     for ws in wb.worksheets:
-
         if ws.sheet_state != "visible":
             continue
 
@@ -173,163 +175,83 @@ def parse_excel(excel_path):
             continue
 
         block_col = find_block_column(ws, merged_map)
-
-        sorted_months = sorted(
-            month_map.items(),
-            key=lambda item: (
-                item[1].row,
-                item[1].column
-            )
-        )
+        sorted_months = sorted(month_map.items(), key=lambda item: (item[1].row, item[1].column))
 
         for i, (month, month_cell) in enumerate(sorted_months):
-
-            year = resolve_year(
-                filename,
-                month
-            )
-
-            day1_col = get_day1_column(
-                ws,
-                month_cell
-            )
-
-            days_in_month = monthrange(
-                year,
-                month
-            )[1]
+            year = resolve_year(filename, month)
+            day1_col = get_day1_column(ws, month_cell)
+            days_in_month = monthrange(year, month)[1]
 
             start_row = month_cell.row
-
             end_row = ws.max_row
 
-            for j in range(
-                i + 1,
-                len(sorted_months)
-            ):
-
+            for j in range(i + 1, len(sorted_months)):
                 next_month_cell = sorted_months[j][1]
-
                 if next_month_cell.row > start_row:
                     end_row = next_month_cell.row - 1
                     break
 
-            for day in range(
-                1,
-                days_in_month + 1
-            ):
+            for day in range(1, days_in_month + 1):
+                target_col = day1_col + day - 1
+                venues = extract_venues(ws, target_col, block_col, merged_map, start_row, end_row)
 
-                target_col = (
-                    day1_col + day - 1
-                )
+                # 元データで共存判定
+                has_takamatsu = "高松" in venues
+                has_takamatsu_in_tamano = "高松in玉野" in venues
 
-                venues = extract_venues(
-                    ws,
-                    target_col,
-                    block_col,
-                    merged_map,
-                    start_row,
-                    end_row
-                )
+                # 高松と高松in玉野が同日にある場合だけ高松を削除
+                if has_takamatsu and has_takamatsu_in_tamano:
+                    venues = [venue for venue in venues if venue != "高松"]
+
+                # 高松in玉野 → 玉野
+                venues = ["玉野" if venue == "高松in玉野" else venue for venue in venues]
 
                 for venue in venues:
-
-                    records.append(
-                        {
-                            "date": date(
-                                year,
-                                month,
-                                day
-                            ),
-                            "venue": venue,
-                        }
-                    )
+                    records.append({
+                        "date": date(year, month, day),
+                        "venue": venue,
+                    })
 
     wb.close()
-
     return records
+
 def get_upload_info(excel_path):
-
     filename = os.path.basename(excel_path)
-
-    wb = load_workbook(
-        excel_path,
-        data_only=True
-    )
-
+    wb = load_workbook(excel_path, data_only=True)
     term = None
 
     for ws in wb.worksheets:
-
         if ws.sheet_state != "visible":
             continue
 
         merged_map = build_merged_map(ws)
-
-        month_map = find_months(
-            ws,
-            merged_map
-        )
+        month_map = find_months(ws, merged_map)
 
         if not month_map:
             continue
 
-        first_month = min(
-            month_map.keys()
-        )
-
+        first_month = min(month_map.keys())
         if 4 <= first_month <= 9:
             term = "上期"
         else:
             term = "下期"
-
         break
 
     wb.close()
 
     if term is None:
-        raise ValueError(
-            "上期・下期を判定できません。"
-        )
+        raise ValueError("上期・下期を判定できません。")
 
-    match_r = re.search(
-        r"R\s*([0-9０-９]+)",
-        filename,
-        re.IGNORECASE
-    )
+    match_r = re.search(r"R\s*([0-9０-９]+)", filename, re.IGNORECASE)
 
     if match_r:
-
-        year = (
-            "R"
-            + str(
-                int(
-                    match_r.group(1).translate(
-                        str.maketrans(
-                            "０１２３４５６７８９",
-                            "0123456789"
-                        )
-                    )
-                )
-            )
-        )
-
+        year = "R" + str(int(match_r.group(1).translate(str.maketrans("０１２３４５６７８９", "0123456789"))))
     else:
-
-        match_year = re.search(
-            r"(20\d{2})",
-            filename
-        )
-
+        match_year = re.search(r"(20\d{2})", filename)
         if not match_year:
-            raise ValueError(
-                "年度を判定できません。"
-            )
+            raise ValueError("年度を判定できません。")
 
-        fiscal_year = int(
-            match_year.group(1)
-        )
-
+        fiscal_year = int(match_year.group(1))
         if term == "上期":
             reiwa = fiscal_year - 2018
         else:
