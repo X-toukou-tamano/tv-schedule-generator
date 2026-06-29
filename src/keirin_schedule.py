@@ -8,11 +8,12 @@ BASE_URL = "https://keirin.jp/pc/raceschedule"
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
-
+SESSION = requests.Session()
+SESSION.headers.update(HEADERS)
 
 def get_month_html(year, month):
     url = f"{BASE_URL}?scyy={year}&scym={month:02d}"
-    r = requests.get(
+    r = SESSION.get(
         url,
         headers=HEADERS,
         timeout=30
@@ -22,7 +23,7 @@ def get_month_html(year, month):
 
 
 def get_racelist(encp):
-    r = requests.post(
+    r = SESSION.post(
         "https://keirin.jp/pc/racelist",
         headers=HEADERS,
         data={
