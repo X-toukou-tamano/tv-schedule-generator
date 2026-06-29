@@ -282,8 +282,11 @@ if uploaded_file is not None:
             temp_path
         )
 
-        save_records(records)
+        saved = save_records(records)
+        st.write(f"保存件数 = {saved}")
 
+        summary = get_summary()
+        st.write(f"DB件数 = {summary}")
         count = update_schedule_info()
 
         save_update_time()
