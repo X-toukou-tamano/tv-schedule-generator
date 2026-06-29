@@ -31,7 +31,18 @@ def get_racelist(encp):
         },
         timeout=30,
     )
-    r.raise_for_status()
+
+    print("=" * 80)
+    print("status :", r.status_code)
+    print("url    :", r.url)
+    print("encp   :", encp)
+    print("-" * 80)
+    print(r.text[:1000])
+    print("=" * 80)
+
+    if r.status_code != 200:
+        raise RuntimeError(f"HTTP {r.status_code}")
+
     html = r.text
 
     m1 = re.search(
@@ -54,8 +65,6 @@ def get_racelist(encp):
         "PC0201": json.loads(m1.group(1)),
         "PJ0301": json.loads(m2.group(1)),
     }
-
-
 def parse_month(year, month):
     html = get_month_html(year, month)
     soup = BeautifulSoup(html, "html.parser")
