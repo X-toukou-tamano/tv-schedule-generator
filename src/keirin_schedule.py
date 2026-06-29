@@ -19,8 +19,6 @@ def get_month_html(year, month):
     )
     r.raise_for_status()
     return r.text
-
-
 def get_racelist(encp):
     r = requests.post(
         "https://keirin.jp/pc/racelist",
@@ -33,17 +31,27 @@ def get_racelist(encp):
     )
     r.raise_for_status()
     html = r.text
-    
-    m = re.search(
-        r"var\s+pc0101_json\s*=\s*(\{[\s\S]*?\});",
+
+    m1 = re.search(
+        r"jsonData\['PC0201'\]\s*=\s*(\{[\s\S]*?\});",
         html,
     )
-    if m is None:
-        raise RuntimeError("pc0101_json が見つかりません")
-        
-    return json.loads(m.group(1))
 
+    m2 = re.search(
+        r"jsonData\['PJ0301'\]\s*=\s*(\{[\s\S]*?\});",
+        html,
+    )
 
+    if m1 is None:
+        raise RuntimeError("PC0201 が見つかりません")
+
+    if m2 is None:
+        raise RuntimeError("PJ0301 が見つかりません")
+
+    return {
+        "PC0201": json.loads(m1.group(1)),
+        "PJ0301": json.loads(m2.group(1)),
+    }
 def parse_month(year, month):
     html = get_month_html(year, month)
     soup = BeautifulSoup(html, "html.parser")
