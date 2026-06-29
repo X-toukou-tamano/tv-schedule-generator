@@ -12,11 +12,10 @@ DB_PATH = os.path.join(
 )
 
 def get_connection():
-    return sqlite3.connect(DB_PATH)
+    return sqlite3.connect("tv_schedule.db")
 
 
 def create_tables():
-
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -52,6 +51,9 @@ def create_tables():
 
     conn.commit()
     conn.close()
+
+    import os
+    raise Exception(os.path.exists("tv_schedule.db"))
 
 def save_records(records):
 
