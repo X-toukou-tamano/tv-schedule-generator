@@ -1,5 +1,3 @@
-raise Exception("DATABASE.PY 読み込まれた")
-
 import sqlite3
 import datetime
 from zoneinfo import ZoneInfo
