@@ -36,12 +36,11 @@ st.set_page_config(
 )
 st.title("TEST 2026-06-29 10:30")
 # DB初期化
-def create_tables():
+ create_tables():
+st.error("create_tables() 実行")
 
-    st.error("create_tables() 実行")
-
-    conn = get_connection()
-    cursor = conn.cursor()
+conn = get_connection()
+cursor = conn.cursor()
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
