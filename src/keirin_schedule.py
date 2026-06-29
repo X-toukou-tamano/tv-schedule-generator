@@ -13,25 +13,20 @@ SESSION.headers.update(HEADERS)
 
 def get_month_html(year, month):
     url = f"{BASE_URL}?scyy={year}&scym={month:02d}"
+
     r = SESSION.get(
         url,
-        headers=HEADERS,
-        timeout=30
+        timeout=30,
     )
-    # r.raise_for_status()
-    print("=" * 80)
-    print("status :", r.status_code)
-    print("url    :", r.url)
-    print("encp   :", encp)
-    print(r.text[:1000])
-    print("=" * 80)
+
+    r.raise_for_status()
+
     return r.text
 
 
 def get_racelist(encp):
     r = SESSION.post(
         "https://keirin.jp/pc/racelist",
-        headers=HEADERS,
         data={
             "encp": encp,
             "disp": "PJ0301",
