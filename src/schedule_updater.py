@@ -96,8 +96,8 @@ def update_schedule_info():
 
         })
 
-    update_event_info(
-        update_records
-    )
+    print(update_records[:10])
+
+    update_event_info(update_records)
 
     return len(update_records)
