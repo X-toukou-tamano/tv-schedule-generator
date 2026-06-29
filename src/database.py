@@ -4,8 +4,12 @@ from zoneinfo import ZoneInfo
 
 
 def get_connection():
-    conn = sqlite3.connect("tv_schedule.db")
-    return conn
+    import os
+
+    db_path = os.path.abspath("tv_schedule.db")
+    raise Exception(db_path)
+
+    return sqlite3.connect(db_path)
 
 
 def create_tables():
