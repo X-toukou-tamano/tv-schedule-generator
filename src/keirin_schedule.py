@@ -3,6 +3,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
+
 BASE_URL = "https://keirin.jp/pc/raceschedule"
 
 HEADERS = {
