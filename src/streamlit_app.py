@@ -296,7 +296,7 @@ if uploaded_file is not None:
             f"{count}件 開催情報を更新しました"
         )
 
-        //st.rerun()
+        # st.rerun()
 
 # ----------------------------
 # パワーポイント生成エリア
