@@ -123,7 +123,10 @@ def save_records(records):
 
         conn.commit()
 
-        return len(records)
+        cursor.execute(
+            "SELECT COUNT(*) FROM calendar_events"
+        )
+        return cursor.fetchone()[0]
 
     except Exception:
 
@@ -133,7 +136,6 @@ def save_records(records):
     finally:
 
         conn.close()
-
 
 def update_event_info(records):
     """
