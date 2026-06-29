@@ -46,7 +46,6 @@ def get_racelist(encp):
     print(r.text[:1000])
     print("=" * 80)
 
-    # ← 一旦コメントアウト
     # r.raise_for_status()
 
     html = r.text
