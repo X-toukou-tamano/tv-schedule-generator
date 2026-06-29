@@ -36,7 +36,7 @@ st.set_page_config(
 )
 st.title("TEST 2026-06-29 10:30")
 # DB初期化
- create_tables():
+ create_tables()
 st.error("create_tables() 実行")
 
 conn = get_connection()
