@@ -38,7 +38,7 @@ st.set_page_config(
 # DB初期化
 def create_tables():
 
-    print("create_tables() 実行")
+    st.error("create_tables() 実行")
 
     conn = get_connection()
     cursor = conn.cursor()
