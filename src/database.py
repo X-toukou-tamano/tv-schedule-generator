@@ -46,7 +46,8 @@ def create_tables():
     FROM sqlite_master
     WHERE type='table'
     """)
-    raise Exception(cursor.fetchall())
+
+    tables = cursor.fetchall()
 
     for column in ("grade", "kubun", "nichiji"):
         try:
@@ -58,6 +59,8 @@ def create_tables():
 
     conn.commit()
     conn.close()
+
+    return tables
 
 def save_records(records):
 
