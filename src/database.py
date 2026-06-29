@@ -14,7 +14,6 @@ def get_connection():
 
 def create_tables():
 
-    raise Exception("create_tables() に入った")
 
     conn = get_connection()
     cursor = conn.cursor()
