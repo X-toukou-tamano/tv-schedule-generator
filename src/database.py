@@ -82,6 +82,25 @@ def save_records(records):
         )
         """)
 
+        from collections import Counter
+
+        pairs = [
+            (
+                str(record["date"]),
+                record["venue"]
+            )
+            for record in records
+        ]
+
+        dup = [
+            x
+            for x, c in Counter(pairs).items()
+            if c > 1
+        ]
+
+        print("重複件数 =", len(dup))
+        print(dup)
+
         unique_dates = sorted(
             {
                 str(record["date"])
@@ -134,7 +153,6 @@ def save_records(records):
     finally:
 
         conn.close()
-
 def update_event_info(records):
     """
     records = [
