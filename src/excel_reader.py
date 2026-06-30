@@ -106,9 +106,18 @@ def normalize_venue_name(raw_name):
     if "MNK" in name_no_space:
         return None
 
-    # 借上げ開催は保持
+    # 高松in玉野は特別扱い
     if "高松in玉野" in name_no_space:
         return "高松in玉野"
+
+    # その他の借上げ開催（○○in△△）は開催地（△△）を返す
+    match = re.search(r"(.+?)in(.+)", name_no_space)
+    if match:
+        host_track = match.group(2)
+
+        for track in KEIRIN_TRACKS:
+            if track == host_track:
+                return track
 
     if re.match(r'^\d+-\d+', name_no_space):
         return "玉野"
