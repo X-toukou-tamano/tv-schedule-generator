@@ -36,14 +36,6 @@ def get_racelist(encp):
         },
         timeout=30,
     )
-
-    print("=" * 80)
-    print("status :", r.status_code)
-    print("url    :", r.url)
-    print("encp   :", encp)
-    print(r.text[:1000])
-    print("=" * 80)
-
     # r.raise_for_status()
 
     html = r.text
