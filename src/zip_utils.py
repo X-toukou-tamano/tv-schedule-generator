@@ -1,21 +1,14 @@
 import os
 import zipfile
+from io import BytesIO
 
 
 def create_zip(ppt_paths):
 
-    upload_dir = os.path.join(
-        os.getcwd(),
-        "uploads"
-    )
-
-    zip_path = os.path.join(
-        upload_dir,
-        "場内放映予定.zip"
-    )
+    zip_buffer = BytesIO()
 
     with zipfile.ZipFile(
-        zip_path,
+        zip_buffer,
         "w",
         compression=zipfile.ZIP_DEFLATED
     ) as zf:
@@ -32,4 +25,6 @@ def create_zip(ppt_paths):
         if os.path.exists(path):
             os.remove(path)
 
-    return zip_path
+    zip_buffer.seek(0)
+
+    return zip_buffer.getvalue()
