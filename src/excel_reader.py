@@ -128,7 +128,10 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
         block_name = get_merged_value(ws.cell(row, block_col), merged_map)
 
         if target_col == 3 and row == 127:
-            print(f"block={block_name!r} current_block={current_block!r}")
+            cell = ws.cell(row, target_col)
+            print(
+                f"sheet={ws.title} C127 raw={cell.value!r} merged={value!r}"
+            )
 
         cleaned_block = clean_block_name(block_name)
 
@@ -212,7 +215,7 @@ def parse_excel(excel_path):
 
                 if month == 7 and day == 1:
                     print(
-                        f"7/1 day1_col={day1_col} target_col={target_col} ({get_column_letter(target_col)})"
+                         f"sheet={ws.title} day1_col={day1_col} target_col={target_col} ({get_column_letter(target_col)})"
                     )
 
                 venues = extract_venues(
