@@ -125,11 +125,14 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
     current_block = None
 
     for row in range(start_row, end_row + 1):
-        if target_col == 3 and row == 127:
+    block_name = get_merged_value(ws.cell(row, block_col), merged_map)
+
+    if target_col == 3 and row == 127:
         print(
             f"block={block_name!r} current_block={current_block!r}"
         )
-        cleaned_block = clean_block_name(block_name)
+
+    cleaned_block = clean_block_name(block_name)
 
         if isinstance(cleaned_block, str) and cleaned_block != "":
             if cleaned_block in TARGET_BLOCKS:
