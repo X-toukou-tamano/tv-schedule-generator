@@ -171,18 +171,27 @@ if st.button("指定期間を生成", use_container_width=True):
         st.error("開始日が終了日より後になっています。")
     else:
         try:
-            zip_path = generate_range_ppt(selected_start, selected_end)
+            zip_data = generate_range_ppt(
+                selected_start,
+                selected_end,
+            )
 
-            if zip_path is None:
-                st.session_state["zip_path"] = None
+            if zip_data is None:
+                st.session_state["zip_data"] = None
                 st.session_state["success_msg"] = None
                 st.warning("指定期間に生成できるデータがありません。")
             else:
-                st.session_state["zip_path"] = zip_path
-                st.session_state["success_msg"] = f"{selected_start} ～ {selected_end} を生成しました。"
+                st.session_state["zip_data"] = zip_data
+                st.session_state["success_msg"] = (
+                    f"{selected_start} ～ {selected_end} を生成しました。"
+                )
 
                 # DBに履歴を保存
-                save_generate_history("range", selected_start, selected_end)
+                save_generate_history(
+                    "range",
+                    selected_start,
+                    selected_end,
+                )
 
                 # 即時書き換え
                 range_from, range_to = get_generate_history("range")
@@ -193,26 +202,32 @@ if st.button("指定期間を生成", use_container_width=True):
                     batch_from,
                     batch_to,
                 )
+
         except Exception as e:
-            st.error(f"パワーポイント生成中にエラーが発生しました: {e}")
+            st.error(
+                f"パワーポイント生成中にエラーが発生しました: {e}"
+            )
 
 if st.button("公開済み全期間を生成", use_container_width=True):
     try:
         result = generate_all_ppt()
 
         if not result:
-            st.session_state["zip_path"] = None
+            st.session_state["zip_data"] = None
             st.session_state["success_msg"] = None
             st.warning("生成できるデータがありません。")
         else:
-            zip_path, last_date = result
-            if zip_path is None:
-                st.session_state["zip_path"] = None
+            zip_data, last_date = result
+
+            if zip_data is None:
+                st.session_state["zip_data"] = None
                 st.session_state["success_msg"] = None
                 st.warning("生成できるデータがありません。")
             else:
-                st.session_state["zip_path"] = zip_path
-                st.session_state["success_msg"] = f"{db_start_date} ～ {last_date} を生成しました。"
+                st.session_state["zip_data"] = zip_data
+                st.session_state["success_msg"] = (
+                    f"{db_start_date} ～ {last_date} を生成しました。"
+                )
 
                 # DBに履歴を保存
                 save_generate_history("batch", db_start_date, last_date)
@@ -230,25 +245,20 @@ if st.button("公開済み全期間を生成", use_container_width=True):
         st.error(f"パワーポイント一括生成中にエラーが発生しました: {e}")
 
 # --- ダウンロードボタンの表示エリア ---
-if st.session_state.get("zip_path"):
-    zip_path = st.session_state["zip_path"]
+if st.session_state.get("zip_data"):
+    success_msg = st.session_state.get(
+        "success_msg",
+        "パワーポイントの生成が完了しました。"
+    )
+    st.success(success_msg)
 
-    # 物理的なファイルの存在チェック
-    if os.path.exists(zip_path):
-        success_msg = st.session_state.get("success_msg", "パワーポイントの生成が完了しました。")
-        st.success(success_msg)
-
-        with open(zip_path, "rb") as f:
-            st.download_button(
-                label="ZIPダウンロード",
-                data=f,
-                file_name=os.path.basename(zip_path),
-                mime="application/zip",
-                use_container_width=True,
-            )
-    else:
-        st.warning("ZIPファイルが見つかりません。再生成してください。")
-        st.session_state["zip_path"] = None
-        st.session_state["success_msg"] = None
+    st.download_button(
+        label="ZIPダウンロード",
+        data=st.session_state["zip_data"],
+        file_name="場内放映予定.zip",
+        mime="application/zip",
+        use_container_width=True,
+        key="download_zip",
+    )
 
 st.divider()
