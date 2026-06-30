@@ -188,7 +188,10 @@ def parse_excel(excel_path):
             continue
 
         block_col = find_block_column(ws, merged_map)
-        sorted_months = sorted(month_map.items(), key=lambda item: (item[1].row, item[1].column))
+        sorted_months = sorted(
+            month_map.items(),
+            key=lambda item: (item[1].row, item[1].column)
+        )
 
         for i, (month, month_cell) in enumerate(sorted_months):
             year = resolve_year(filename, month)
@@ -208,11 +211,18 @@ def parse_excel(excel_path):
                 target_col = day1_col + day - 1
 
                 if month == 7 and day == 1:
-                print(
-                    f"7/1 day1_col={day1_col} target_col={target_col} ({get_column_letter(target_col)})"
-                )
+                    print(
+                        f"7/1 day1_col={day1_col} target_col={target_col} ({get_column_letter(target_col)})"
+                    )
 
-                venues = extract_venues(...)
+                venues = extract_venues(
+                    ws,
+                    target_col,
+                    block_col,
+                    merged_map,
+                    start_row,
+                    end_row,
+                )
 
                 # 元データで共存判定
                 has_takamatsu = "高松" in venues
@@ -220,10 +230,16 @@ def parse_excel(excel_path):
 
                 # 高松と高松in玉野が同日にある場合だけ高松を削除
                 if has_takamatsu and has_takamatsu_in_tamano:
-                    venues = [venue for venue in venues if venue != "高松"]
+                    venues = [
+                        venue for venue in venues
+                        if venue != "高松"
+                    ]
 
                 # 高松in玉野 → 玉野
-                venues = ["玉野" if venue == "高松in玉野" else venue for venue in venues]
+                venues = [
+                    "玉野" if venue == "高松in玉野" else venue
+                    for venue in venues
+                ]
 
                 for venue in venues:
                     records.append({
