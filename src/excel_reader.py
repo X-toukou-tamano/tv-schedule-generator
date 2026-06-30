@@ -4,6 +4,7 @@ import unicodedata
 from calendar import monthrange
 from datetime import date
 from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
 
 KEIRIN_TRACKS = [
     "函館", "青森", "いわき平", "弥彦", "前橋", "取手", "宇都宮", "大宮", "西武園", "京王閣", "立川",
@@ -124,7 +125,10 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
     current_block = None
 
     for row in range(start_row, end_row + 1):
-        block_name = get_merged_value(ws.cell(row, block_col), merged_map)
+        if target_col == 3 and row == 127:
+        print(
+            f"block={block_name!r} current_block={current_block!r}"
+        )
         cleaned_block = clean_block_name(block_name)
 
         if isinstance(cleaned_block, str) and cleaned_block != "":
@@ -141,6 +145,12 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
 
         value = get_merged_value(ws.cell(row, target_col), merged_map)
 
+        if target_col == 3 and row == 127:
+            cell = ws.cell(row, target_col)
+            print(
+                f"C127 raw={cell.value!r} merged={value!r}"
+            )
+
         if value is None:
             continue
 
@@ -154,6 +164,12 @@ def extract_venues(ws, target_col, block_col, merged_map, start_row, end_row):
             continue
 
         cleaned_venue = normalize_venue_name(value_str)
+
+        if target_col == 3:
+        print(
+            f"row={row} value={value_str!r} normalized={cleaned_venue!r}"
+        )
+
         if cleaned_venue:
             venues.append(cleaned_venue)
 
@@ -193,7 +209,13 @@ def parse_excel(excel_path):
 
             for day in range(1, days_in_month + 1):
                 target_col = day1_col + day - 1
-                venues = extract_venues(ws, target_col, block_col, merged_map, start_row, end_row)
+
+                if month == 7 and day == 1:
+                print(
+                    f"7/1 day1_col={day1_col} target_col={target_col} ({get_column_letter(target_col)})"
+                )
+
+                venues = extract_venues(...)
 
                 # 元データで共存判定
                 has_takamatsu = "高松" in venues
