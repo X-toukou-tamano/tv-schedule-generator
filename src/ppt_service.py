@@ -10,7 +10,7 @@ def generate_range_ppt(
     end_date,
 ):
     """
-    指定期間のPPTを生成してZIPを返す
+    指定期間のPPTを生成してZIPデータを返す
     """
 
     schedule_data_by_date = get_schedule_data(
@@ -46,7 +46,7 @@ def generate_range_ppt(
 
 def generate_all_ppt():
     """
-    公開済み全期間のPPTを生成してZIPを返す
+    公開済み全期間のPPTを生成してZIPデータを返す
     """
 
     summary = get_summary()
@@ -90,8 +90,8 @@ def generate_all_ppt():
 
         last_date = event_date
 
-    zip_path = create_zip(
+    zip_data = create_zip(
         ppt_paths
     )
 
-    return zip_path, last_date
+    return zip_data, last_date
