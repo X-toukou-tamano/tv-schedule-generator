@@ -27,4 +27,9 @@ def create_zip(ppt_paths):
                 arcname=os.path.basename(path)
             )
 
+    # ZIP作成後、元のPPTを削除
+    for path in ppt_paths:
+        if os.path.exists(path):
+            os.remove(path)
+
     return zip_path
