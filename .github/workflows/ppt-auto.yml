@@ -28,7 +28,7 @@ jobs:
 
       - name: Generate PPT
         run: |
-          python src/generate_today_ppt.py
+          python src/ppt_generator.py
 
       - name: Upload PPT
         uses: actions/upload-artifact@v4
