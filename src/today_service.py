@@ -11,7 +11,7 @@ def get_schedule_data(start_date, end_date):
     rows = get_events()
     excel_data = []
 
-    for event_date, venue_name, grade, kubun, nichiji in rows:
+    for event_date, organizer, venue_name, grade, kubun, nichiji in rows:
         event_date_obj = date.fromisoformat(event_date)
 
         if not (start_date <= event_date_obj <= end_date):
