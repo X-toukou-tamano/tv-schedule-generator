@@ -1,0 +1,42 @@
+name: Update TV Database
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-db:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install packages
+        run: |
+          pip install -r requirements.txt
+
+      - name: Build database
+        run: |
+          python src/build_db.py
+
+      - name: Commit database
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add src/tv_schedule.db
+
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Update tv_schedule.db"
+            git push
+          fi
