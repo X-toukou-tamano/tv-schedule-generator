@@ -249,3 +249,33 @@ def get_generate_history(history_type):
         row_from[0] if row_from else None,
         row_to[0] if row_to else None,
     )
+def get_place_info(event_date):
+    """
+    開催日から主催者・開催場を取得
+    event_date : 'YYYY-MM-DD'
+    """
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT organizer, venue_name
+        FROM calendar_events
+        WHERE event_date = ?
+        LIMIT 1
+        """,
+        (event_date,),
+    )
+
+    row = cursor.fetchone()
+
+    conn.close()
+
+    if row is None:
+        return None
+
+    return {
+        "organizer": row[0],
+        "venue": row[1],
+    }
