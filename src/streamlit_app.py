@@ -142,7 +142,18 @@ if uploaded_file is not None:
                 f"{len(records)}件登録しました\n"
                 f"{count}件 開催情報を更新しました"
             )
-            st.rerun()
+
+            # 最新DBをダウンロード
+            db_path = os.path.join(os.path.dirname(__file__), "tv_schedule.db")
+
+            with open(db_path, "rb") as f:
+                st.download_button(
+                    label="📥 最新DBをダウンロード",
+                    data=f,
+                    file_name="tv_schedule.db",
+                    mime="application/octet-stream",
+                    use_container_width=True,
+                )
 
         except Exception as e:
             st.exception(e)
