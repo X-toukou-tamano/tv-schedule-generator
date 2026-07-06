@@ -227,12 +227,6 @@ def parse_excel(excel_path):
                         if venue != "高松"
                     ]
 
-                # 高松in玉野 → 玉野
-                venues = [
-                    "玉野" if venue == "高松in玉野" else venue
-                    for venue in venues
-                ]
-
                 for venue in venues:
                     records.append({
                         "date": date(year, month, day),
