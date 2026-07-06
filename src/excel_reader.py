@@ -110,14 +110,14 @@ def normalize_venue_name(raw_name):
     if "高松in玉野" in name_no_space:
         return "高松in玉野"
 
-    # その他の借上げ開催（○○in△△）は開催地（△△）を返す
+    # 借上げ開催（○○in△△）はそのまま返す
     match = re.search(r"(.+?)in(.+)", name_no_space)
     if match:
+        organizer = match.group(1)
         host_track = match.group(2)
 
-        for track in KEIRIN_TRACKS:
-            if track == host_track:
-                return track
+    if host_track in KEIRIN_TRACKS:
+        return f"{organizer}in{host_track}"
 
     if re.match(r'^\d+-\d+', name_no_space):
         return "玉野"
@@ -228,9 +228,20 @@ def parse_excel(excel_path):
                     ]
 
                 for venue in venues:
+
+                    match = re.fullmatch(r"(.+?)in(.+)", venue)
+
+                    if match:
+                        organizer = match.group(1)
+                        venue_name = match.group(2)
+                    else:
+                        organizer = venue
+                        venue_name = venue
+
                     records.append({
                         "date": date(year, month, day),
-                        "venue": venue,
+                        "organizer": organizer,
+                        "venue": venue_name,
                     })
 
     wb.close()
