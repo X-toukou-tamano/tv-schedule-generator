@@ -1,8 +1,6 @@
 import os
 from datetime import datetime
 import streamlit as st
-import pandas as pd
-from database import get_connection
 
 from database import (
     create_tables,
@@ -16,6 +14,10 @@ from database import (
 from excel_reader import get_upload_info, parse_excel
 from ppt_service import generate_all_ppt, generate_range_ppt
 from schedule_updater import update_schedule_info
+from github_db import (
+    download_db,
+    upload_db,
+)
 
 USERNAME = "tamano-keirin_TVroom"
 PASSWORD = "tamano0401"
@@ -24,6 +26,9 @@ st.set_page_config(
     page_title="TV放映予定管理",
     layout="wide"
 )
+
+# GitHubからDB取得（初回はFalse）
+download_db()
 
 # DB初期化
 create_tables()
@@ -140,36 +145,13 @@ if uploaded_file is not None:
             count = update_schedule_info()
             save_update_time()
 
+            # GitHubへ保存
+            upload_db()
+
             st.success(
                 f"{len(records)}件登録しました\n"
                 f"{count}件 開催情報を更新しました"
             )
-
-            # ===== DBの中身確認 =====
-            conn = get_connection()
-
-            df = pd.read_sql_query(
-                "SELECT * FROM calendar_events ORDER BY event_date, venue_name",
-                conn,
-            )
-
-            conn.close()
-
-            st.subheader("DB内容確認")
-            st.write(f"件数: {len(df)}件")
-            st.dataframe(df, use_container_width=True)
-
-            # 最新DBをダウンロード
-            db_path = os.path.join(os.path.dirname(__file__), "tv_schedule.db")
-
-            with open(db_path, "rb") as f:
-                st.download_button(
-                    label="📥 最新DBをダウンロード",
-                    data=f,
-                    file_name="tv_schedule.db",
-                    mime="application/octet-stream",
-                    use_container_width=True,
-                )
 
         except Exception as e:
             st.exception(e)
