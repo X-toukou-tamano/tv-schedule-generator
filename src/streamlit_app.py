@@ -27,10 +27,11 @@ st.set_page_config(
     layout="wide"
 )
 
-# GitHubからDB取得（初回はFalse）
+# GitHubからDB取得
+# GitHubにDBがあれば取得し、なければ初回のみ新規作成
 download_db()
 
-# DB初期化
+# テーブルが無ければ作成
 create_tables()
 
 # ----------------------------
@@ -202,6 +203,8 @@ if st.button("指定期間を生成", use_container_width=True):
                     selected_end,
                 )
 
+                upload_db()
+
                 # 即時書き換え
                 range_from, range_to = get_generate_history("range")
                 render_history_info(
@@ -240,7 +243,7 @@ if st.button("公開済み全期間を生成", use_container_width=True):
 
                 # DBに履歴を保存
                 save_generate_history("batch", db_start_date, last_date)
-
+                upload_db()
                 # 即時書き換え
                 batch_from, batch_to = get_generate_history("batch")
                 render_history_info(
