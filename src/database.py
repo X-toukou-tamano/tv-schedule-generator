@@ -272,5 +272,5 @@ def get_place_info(event_date):
         return None
 
     return {
-        "venue": row[1],
+        "venue": row[0],
     }
