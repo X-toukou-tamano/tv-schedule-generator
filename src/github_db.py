@@ -18,7 +18,6 @@ TOKEN = st.secrets["GITHUB_TOKEN"]
 
 BRANCH = "main"
 
-# GitHub上で保存する場所
 FILE_PATH = "tv_schedule.db"
 
 API_URL = (
@@ -37,22 +36,12 @@ HEADERS = {
 # =====================================================
 
 def get_db_sha():
-    """
-    GitHub上のDBファイルのSHAを取得
-
-    Returns
-    -------
-    str | None
-        存在すればSHA
-        無ければNone
-    """
+    """GitHub上のDBファイルのSHAを取得"""
 
     response = requests.get(
         API_URL,
         headers=HEADERS,
-        params={
-            "ref": BRANCH
-        },
+        params={"ref": BRANCH},
         timeout=30,
     )
 
@@ -65,28 +54,43 @@ def get_db_sha():
 
 
 # =====================================================
+# GitHub上にDBが存在するか
+# =====================================================
+
+def exists_db():
+    """GitHub上にDBが存在するか"""
+
+    return get_db_sha() is not None
+
+
+# =====================================================
 # GitHub → ローカル
 # =====================================================
 
-def download_db():
+def download_db(force=False):
     """
     GitHubからSQLiteを取得
+
+    Parameters
+    ----------
+    force : bool
+        TrueならローカルDBがあっても上書きする
 
     Returns
     -------
     bool
-        True : ダウンロード成功
-        False : GitHubに存在しない
     """
+
+    if os.path.exists(DB_PATH) and not force:
+        print("[GitHub] ローカルDBを使用")
+        return True
 
     print("[GitHub] DBダウンロード開始")
 
     response = requests.get(
         API_URL,
         headers=HEADERS,
-        params={
-            "ref": BRANCH
-        },
+        params={"ref": BRANCH},
         timeout=30,
     )
 
@@ -96,12 +100,10 @@ def download_db():
 
     response.raise_for_status()
 
-    content = base64.b64decode(
-        response.json()["content"]
-    )
+    content = response.json()["content"].replace("\n", "")
 
     with open(DB_PATH, "wb") as f:
-        f.write(content)
+        f.write(base64.b64decode(content))
 
     print("[GitHub] DBダウンロード成功")
 
@@ -123,11 +125,7 @@ def upload_db():
     print("[GitHub] DBアップロード開始")
 
     with open(DB_PATH, "rb") as f:
-        encoded = base64.b64encode(
-            f.read()
-        ).decode()
-
-    sha = get_db_sha()
+        encoded = base64.b64encode(f.read()).decode("utf-8")
 
     body = {
         "message": "Update tv_schedule.db",
@@ -135,7 +133,9 @@ def upload_db():
         "branch": BRANCH,
     }
 
-    if sha:
+    sha = get_db_sha()
+
+    if sha is not None:
         body["sha"] = sha
         print("[GitHub] 上書き保存")
     else:
@@ -148,29 +148,8 @@ def upload_db():
         timeout=60,
     )
 
-    if response.status_code not in (200, 201):
-        raise RuntimeError(
-            f"GitHub保存失敗\n"
-            f"status={response.status_code}\n"
-            f"{response.text}"
-        )
+    response.raise_for_status()
 
     print("[GitHub] 保存成功")
 
     return True
-
-
-# =====================================================
-# GitHub上にDBが存在するか
-# =====================================================
-
-def exists_db():
-    """
-    GitHub上にDBが存在するか
-
-    Returns
-    -------
-    bool
-    """
-
-    return get_db_sha() is not None
