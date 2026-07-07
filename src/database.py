@@ -18,7 +18,6 @@ def create_tables():
     CREATE TABLE IF NOT EXISTS calendar_events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         event_date TEXT NOT NULL,
-        organizer TEXT NOT NULL,
         venue_name TEXT NOT NULL,
         grade TEXT,
         kubun TEXT,
@@ -35,7 +34,7 @@ def create_tables():
     """)
     conn.commit()
 
-    for column in ("organizer", "grade", "kubun", "nichiji"):
+    for column in ("grade", "kubun", "nichiji"):
         try:
             cursor.execute(f"ALTER TABLE calendar_events ADD COLUMN {column} TEXT")
         except sqlite3.OperationalError:
@@ -67,15 +66,13 @@ def save_records(records):
             """
             INSERT OR REPLACE INTO calendar_events (
                 event_date,
-                organizer,
                 venue_name
             )
-            VALUES (?, ?, ?)
+            VALUES (?, ?)
             """,
             [
                 (
                     str(record["date"]),
-                    record["organizer"],
                     record["venue"],
                 )
                 for record in records
@@ -135,7 +132,6 @@ def get_events():
         """
         SELECT
             event_date,
-            organizer,
             venue_name,
             grade,
             kubun,
@@ -260,7 +256,7 @@ def get_place_info(event_date):
 
     cursor.execute(
         """
-        SELECT organizer, venue_name
+        SELECT venue_name
         FROM calendar_events
         WHERE event_date = ?
         LIMIT 1
@@ -276,6 +272,5 @@ def get_place_info(event_date):
         return None
 
     return {
-        "organizer": row[0],
         "venue": row[1],
     }
