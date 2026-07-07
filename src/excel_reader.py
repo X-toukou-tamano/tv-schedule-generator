@@ -233,15 +233,12 @@ def parse_excel(excel_path):
                     match = re.fullmatch(r"(.+?)in(.+)", venue)
 
                     if match:
-                        organizer = match.group(1)
                         venue_name = match.group(2)
                     else:
-                        organizer = venue
                         venue_name = venue
 
                     records.append({
                         "date": date(year, month, day),
-                        "organizer": organizer,
                         "venue": venue_name,
                     })
 
