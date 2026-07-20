@@ -68,7 +68,9 @@ def build_display_text(
         grade
         .replace("F1", "FⅠ")
         .replace("F2", "FⅡ")
-        .replace("F3", "FⅢ")
+        .replace("G1", "GⅠ")
+        .replace("G2", "GⅡ")
+        .replace("G3", "GⅢ")
     )
 
     return (
