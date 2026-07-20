@@ -58,6 +58,12 @@ def build_display_text(
 
     name = str(name).strip()
     grade = str(grade).strip()
+    grade = (
+    grade
+    .replace("F1", "FⅠ")
+    .replace("F2", "FⅡ")
+    .replace("F3", "FⅢ")
+)
     status = str(status).strip()
 
     return (
