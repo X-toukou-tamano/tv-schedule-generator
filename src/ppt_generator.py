@@ -50,13 +50,17 @@ DAY_FONT = RGBColor(0, 0, 0)
 def build_display_text(
     name,
     grade,
-    status
+    status,
+    is_night=False
 ):
     """
     場名 + グレード + 日数
     """
 
     name = str(name).strip()
+
+if is_night:
+    name += "ナイター"
     grade = str(grade).strip()
     grade = (
     grade
@@ -184,7 +188,8 @@ def create_powerpoint(
             text = build_display_text(
                 event.get("name", ""),
                 event.get("grade", ""),
-                event.get("status", "")
+                event.get("status", ""),
+                True
             )
 
             add_schedule_box(
