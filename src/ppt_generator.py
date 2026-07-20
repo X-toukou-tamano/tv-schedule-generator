@@ -58,17 +58,18 @@ def build_display_text(
     """
 
     name = str(name).strip()
-
-if is_night:
-    name += "ナイター"
     grade = str(grade).strip()
-    grade = (
-    grade
-    .replace("F1", "FⅠ")
-    .replace("F2", "FⅡ")
-    .replace("F3", "FⅢ")
-)
     status = str(status).strip()
+
+    if is_night:
+        name += "ナイター"
+
+    grade = (
+        grade
+        .replace("F1", "FⅠ")
+        .replace("F2", "FⅡ")
+        .replace("F3", "FⅢ")
+    )
 
     return (
         f"{name}"
