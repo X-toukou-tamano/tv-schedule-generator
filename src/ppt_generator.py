@@ -94,7 +94,7 @@ def add_schedule_box(
     height,
     text,
     fill_color,
-    font_color
+    font_color,
     font_size
 ):
 
@@ -204,7 +204,7 @@ def create_powerpoint(
                 height=height,
                 text=text,
                 fill_color=NIGHT_FILL,
-                font_color=NIGHT_FONT
+                font_color=NIGHT_FONT,
                 font_size=28
             )
 
@@ -240,7 +240,7 @@ def create_powerpoint(
                 height=height,
                 text=text,
                 fill_color=DAY_FILL,
-                font_color=DAY_FONT
+                font_color=DAY_FONT,
                 font_size=32
             )
 
