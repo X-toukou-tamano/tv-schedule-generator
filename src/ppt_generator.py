@@ -113,8 +113,8 @@ def add_schedule_box(
     run.text = text
 
     font = run.font
-    font.name = "Rockwell"
-    font.size = Pt(28)
+    font.name = "Yu Gothic"
+    font.size = Pt(32)
     font.bold = True
     font.color.rgb = font_color
 
