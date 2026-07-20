@@ -95,6 +95,7 @@ def add_schedule_box(
     text,
     fill_color,
     font_color
+    font_size
 ):
 
     shape = slide.shapes.add_shape(
@@ -127,7 +128,7 @@ def add_schedule_box(
 
     font = run.font
     font.name = "Yu Gothic"
-    font.size = Pt(32)
+    font.size = Pt(font_size)
     font.bold = True
     font.color.rgb = font_color
 
@@ -204,6 +205,7 @@ def create_powerpoint(
                 text=text,
                 fill_color=NIGHT_FILL,
                 font_color=NIGHT_FONT
+                font_size=28
             )
 
     # ==================================================
@@ -239,6 +241,7 @@ def create_powerpoint(
                 text=text,
                 fill_color=DAY_FILL,
                 font_color=DAY_FONT
+                font_size=32
             )
 
     # ==================================================
